@@ -124,7 +124,6 @@ export const clients = pgTable("clients", {
   createdBy: varchar("created_by").references(() => users.id),
   
   status: text("status").notNull().default("attivo"), // 'attivo' or 'inattivo'
-  practicePhase: text("practice_phase").notNull().default("trattativa"), // 'trattativa', 'contratto_inviato', 'contratto_firmato'
 });
 
 export const insertClientSchema = createInsertSchema(clients).omit({

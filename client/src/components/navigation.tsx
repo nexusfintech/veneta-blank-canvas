@@ -9,8 +9,7 @@ import {
   Handshake,
   ChevronRight,
   LogOut,
-  UserCog,
-  Workflow
+  UserCog
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,12 +25,6 @@ const navigationItems = [
     href: "/",
     icon: Users,
     description: "Gestione clienti"
-  },
-  {
-    name: "Fasi",
-    href: "/phases",
-    icon: Workflow,
-    description: "Kanban pratiche"
   },
   {
     name: "Contratti",

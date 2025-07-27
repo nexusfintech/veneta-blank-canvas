@@ -8,7 +8,6 @@ import Home from "@/pages/home";
 import Contracts from "@/pages/contracts";
 import Settings from "@/pages/settings";
 import UserManagement from "@/pages/user-management";
-import Phases from "@/pages/phases";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -31,7 +30,6 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/contracts" component={Contracts} />
-      <Route path="/phases" component={Phases} />
       <Route path="/settings" component={Settings} />
       <Route path="/users" component={UserManagement} />
       <Route component={NotFound} />
