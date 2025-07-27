@@ -42,6 +42,9 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
   const { toast } = useToast();
   const [clientType, setClientType] = useState<"persona_fisica" | "azienda">("persona_fisica");
   const [openSections, setOpenSections] = useState({
+    personal: true,
+    residence: false,
+    document: false,
     company: true,
     representative: false,
     owners: false,
@@ -59,6 +62,15 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
       lastName: "",
       fiscalCode: "",
       birthDate: "",
+      gender: "",
+      birthPlace: "",
+      citizenship: "",
+      residenceLocality: "",
+      documentType: "",
+      documentNumber: "",
+      documentIssuedBy: "",
+      documentIssuePlace: "",
+      documentIssueDate: "",
       companyName: "",
       vatNumber: "",
       companyFiscalCode: "",
@@ -216,62 +228,422 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
             {/* Person Form */}
             {clientType === "persona_fisica" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome *</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cognome *</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="fiscalCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Codice Fiscale *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="RSSMRA85M01H501Z" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="birthDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Data di Nascita</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                {/* Dati Anagrafici */}
+                <Collapsible open={openSections.personal} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, personal: open }))}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <h4 className="text-lg font-medium text-slate-900">Dati Anagrafici</h4>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${openSections.personal ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome *</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cognome *</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="gender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Sesso</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleziona" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="M">Maschio</SelectItem>
+                                <SelectItem value="F">Femmina</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="birthPlace"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Luogo di Nascita</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="birthDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data di Nascita *</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="fiscalCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Codice Fiscale *</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="RSSMRA85M01H501Z" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="citizenship"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cittadinanza</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Italiana" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Residenza */}
+                <Collapsible open={openSections.residence} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, residence: open }))}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <h4 className="text-lg font-medium text-slate-900">Residenza</h4>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${openSections.residence ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="residenceLocality"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Località/Comune di Residenza</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Indirizzo (Via/Piazza e numero civico)</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Via Roma, 123" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CAP</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="province"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Provincia</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Documento di Identità */}
+                <Collapsible open={openSections.document} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, document: open }))}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <h4 className="text-lg font-medium text-slate-900">Documento di Identità</h4>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${openSections.document ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="documentType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo Documento</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleziona tipo" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="carta_identita">Carta d'Identità</SelectItem>
+                                <SelectItem value="passaporto">Passaporto</SelectItem>
+                                <SelectItem value="patente">Patente di Guida</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="documentNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Numero Documento</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="documentIssuedBy"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Autorità che ha rilasciato</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Comune di Milano" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="documentIssuePlace"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Luogo di Rilascio</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="documentIssueDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data di Rilascio</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Prodotto Richiesto */}
+                <Collapsible open={openSections.product} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, product: open }))}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <h4 className="text-lg font-medium text-slate-900">Prodotto Richiesto</h4>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${openSections.product ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="requestedProduct"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prodotto Finanziario Richiesto</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleziona prodotto" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="mutuo_ipotecario">Mutuo Ipotecario</SelectItem>
+                              <SelectItem value="prestito_personale">Prestito Personale</SelectItem>
+                              <SelectItem value="finanziamento_auto">Finanziamento Auto</SelectItem>
+                              <SelectItem value="cessione_quinto">Cessione del Quinto</SelectItem>
+                              <SelectItem value="carta_credito">Carta di Credito</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="requestedCapital"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Capitale Richiesto (€)</FormLabel>
+                            <FormControl>
+                              <Input type="number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="financingDuration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Durata Finanziamento (mesi)</FormLabel>
+                            <FormControl>
+                              <Input type="number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="interestRateType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipologia di Tasso</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleziona tipo tasso" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="fisso">Fisso</SelectItem>
+                                <SelectItem value="variabile">Variabile</SelectItem>
+                                <SelectItem value="misto">Misto</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Compenso e Oneri */}
+                <Collapsible open={openSections.compensation} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, compensation: open }))}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <h4 className="text-lg font-medium text-slate-900">Compenso e Oneri</h4>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${openSections.compensation ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="mediatorCompensation"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Compenso Mediatore (€ o %)</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="1500 o 2.5%" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="commission"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Provvigione (%)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="instructionFees"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Oneri di Istruttoria (€)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="contractDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data Sottoscrizione Contratto</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             )}
 

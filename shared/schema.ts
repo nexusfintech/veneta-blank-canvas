@@ -53,11 +53,24 @@ export const clients = pgTable("clients", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   type: text("type").notNull(), // 'persona_fisica' or 'azienda'
   
-  // Individual fields
+  // Individual fields - Dati anagrafici
   firstName: text("first_name"),
   lastName: text("last_name"),
   fiscalCode: text("fiscal_code"),
   birthDate: date("birth_date"),
+  gender: text("gender"), // M/F
+  birthPlace: text("birth_place"),
+  citizenship: text("citizenship"),
+  
+  // Individual fields - Residenza
+  residenceLocality: text("residence_locality"),
+  
+  // Individual fields - Documento di identità
+  documentType: text("document_type"),
+  documentNumber: text("document_number"),
+  documentIssuedBy: text("document_issued_by"),
+  documentIssuePlace: text("document_issue_place"),
+  documentIssueDate: date("document_issue_date"),
   
   // Company basic fields
   companyName: text("company_name"),

@@ -61,11 +61,24 @@ const beneficialOwnerFormSchema = z.object({
 
 export const clientFormSchema = z.object({
   type: z.enum(["persona_fisica", "azienda"]),
-  // Individual fields
+  // Individual fields - Dati anagrafici
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   fiscalCode: z.string().optional(),
   birthDate: z.string().optional(),
+  gender: z.string().optional(),
+  birthPlace: z.string().optional(),
+  citizenship: z.string().optional(),
+  
+  // Individual fields - Residenza
+  residenceLocality: z.string().optional(),
+  
+  // Individual fields - Documento di identità
+  documentType: z.string().optional(),
+  documentNumber: z.string().optional(),
+  documentIssuedBy: z.string().optional(),
+  documentIssuePlace: z.string().optional(),
+  documentIssueDate: z.string().optional(),
   // Company basic fields
   companyName: z.string().optional(),
   vatNumber: z.string().optional(),
