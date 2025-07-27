@@ -92,10 +92,13 @@ export default function Home() {
       console.log("Deleting client with ID:", id);
       const response = await apiRequest("DELETE", `/api/clients/${id}`);
       console.log("Delete response:", response);
-      return response;
+      // For DELETE requests, we might not need to parse JSON if it's just a success message
+      const result = await response.json();
+      console.log("Delete result:", result);
+      return result;
     },
-    onSuccess: () => {
-      console.log("Client deleted successfully");
+    onSuccess: (data, variables) => {
+      console.log("Client deleted successfully", { data, deletedId: variables });
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({

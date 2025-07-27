@@ -243,9 +243,11 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            console.log("Delete button clicked for client ID:", client.id);
                             onDelete(client.id);
                           }}
                           title="Elimina"
+                          disabled={false} // We don't have access to loading state here, but we can add it later
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
