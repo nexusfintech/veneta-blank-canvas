@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Client } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ClientsTableProps {
   clients: Client[];
@@ -17,6 +18,7 @@ interface ClientsTableProps {
 
 export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: ClientsTableProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [generatedUrls, setGeneratedUrls] = useState<Record<string, string>>({});
 
   const generateZohoSignUrl = (client: Client) => {
@@ -139,6 +141,9 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Codice Fiscale/P.IVA</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Contatti</TableHead>
+                {user?.role === "admin" && (
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Proprietario</TableHead>
+                )}
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Stato</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Azioni</TableHead>
               </TableRow>
@@ -146,7 +151,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
             <TableBody>
               {clients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={user?.role === "admin" ? 7 : 6} className="text-center py-8 text-slate-500">
                     Nessun cliente trovato
                   </TableCell>
                 </TableRow>
@@ -190,6 +195,12 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                       <div>{client.phone}</div>
                       <div>{client.city}</div>
                     </TableCell>
+                    {user?.role === "admin" && (
+                      <TableCell className="text-sm text-slate-500">
+                        <div>{(client as any).creatorName || "N/A"}</div>
+                        <div className="text-xs">{(client as any).creatorEmail || ""}</div>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Badge variant={client.status === "attivo" ? "default" : "secondary"}>
                         {client.status === "attivo" ? "Attivo" : "Inattivo"}
@@ -221,18 +232,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-amber-600 hover:text-amber-900"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleContractGeneration(client);
-                          }}
-                          title="Genera Contratto"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
+
                         <Button
                           variant="ghost"
                           size="sm"

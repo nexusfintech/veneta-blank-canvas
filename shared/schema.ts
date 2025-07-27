@@ -120,6 +120,9 @@ export const clients = pgTable("clients", {
   province: text("province"), // For individuals
   notes: text("notes"),
   
+  // Owner/creator of the client record
+  createdBy: varchar("created_by").references(() => users.id),
+  
   status: text("status").notNull().default("attivo"), // 'attivo' or 'inattivo'
 });
 

@@ -100,11 +100,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
-  // Get all clients (protected route - admin can see all, users see limited data)
+  // Get all clients (protected route - admin can see all, users see only their own)
   app.get("/api/clients", requireAuth, async (req, res) => {
     try {
       const { search, type, status } = req.query;
       const userRole = req.session.user?.role;
+      const userId = req.session.userId;
 
       let clients;
       if (search) {
@@ -121,23 +122,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // If user is not admin, hide contact information (email, phone, address)
+      // If user is not admin, show only their own clients and hide contact information
       if (userRole !== "admin") {
-        clients = clients.map(client => ({
-          ...client,
-          email: undefined,
-          phone: undefined,
-          address: undefined,
-          zipCode: undefined,
-          city: undefined,
-          province: undefined,
-          legalAddress: undefined,
-          legalZipCode: undefined,
-          legalCity: undefined,
-          legalProvince: undefined,
-          fax: undefined,
-          pec: undefined,
-        }));
+        clients = clients
+          .filter(client => client.createdBy === userId)
+          .map(client => ({
+            ...client,
+            email: undefined,
+            phone: undefined,
+            address: undefined,
+            zipCode: undefined,
+            city: undefined,
+            province: undefined,
+            legalAddress: undefined,
+            legalZipCode: undefined,
+            legalCity: undefined,
+            legalProvince: undefined,
+            fax: undefined,
+            pec: undefined,
+          }));
+      } else {
+        // Admin can see all clients, add creator information
+        const clientsWithCreator = await Promise.all(
+          clients.map(async (client) => {
+            const creator = client.createdBy ? await storage.getUser(client.createdBy) : null;
+            return {
+              ...client,
+              creatorName: creator ? `${creator.firstName} ${creator.lastName}` : "Unknown",
+              creatorEmail: creator?.email || "",
+            };
+          })
+        );
+        clients = clientsWithCreator;
       }
 
       res.json(clients);
@@ -146,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get client by ID (protected route - admin can see all, users see limited data)
+  // Get client by ID (protected route - admin can see all, users see only their own)
   app.get("/api/clients/:id", requireAuth, async (req, res) => {
     try {
       const client = await storage.getClient(req.params.id);
@@ -155,9 +171,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userRole = req.session.user?.role;
+      const userId = req.session.userId;
       
-      // If user is not admin, hide contact information
+      // If user is not admin, check if they own this client and hide contact information
       if (userRole !== "admin") {
+        if (client.createdBy !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
         const limitedClient = {
           ...client,
           email: undefined,
@@ -176,7 +197,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(limitedClient);
       }
 
-      res.json(client);
+      // Admin can see all clients with creator info
+      const creator = client.createdBy ? await storage.getUser(client.createdBy) : null;
+      const clientWithCreator = {
+        ...client,
+        creatorName: creator ? `${creator.firstName} ${creator.lastName}` : "Unknown",
+        creatorEmail: creator?.email || "",
+      };
+
+      res.json(clientWithCreator);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch client" });
     }
@@ -186,7 +215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/clients", requireAuth, async (req, res) => {
     try {
       const validatedData = insertClientSchema.parse(req.body);
-      const client = await storage.createClient(validatedData);
+      // Add the current user as the creator
+      const clientData = {
+        ...validatedData,
+        createdBy: req.session.userId,
+      };
+      const client = await storage.createClient(clientData);
       res.status(201).json(client);
     } catch (error) {
       if (error instanceof z.ZodError) {
