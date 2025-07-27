@@ -14,7 +14,7 @@ import {
   MapPin,
   Euro
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +74,20 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
       companyName: "",
       vatNumber: "",
       companyFiscalCode: "",
+      repFirstName: "",
+      repLastName: "",
+      repFiscalCode: "",
+      repBirthPlace: "",
+      repBirthDate: "",
+      repResidenceAddress: "",
+      repResidenceZipCode: "",
+      repResidenceCity: "",
+      repResidenceProvince: "",
+      repDocumentType: "",
+      repDocumentNumber: "",
+      repDocumentAuthority: "",
+      repDocumentIssuePlace: "",
+      repDocumentIssueDate: "",
       legalAddress: "",
       legalZipCode: "",
       legalCity: "",
@@ -184,11 +198,81 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
     form.setValue("type", newType);
   };
 
-  const handleContractGeneration = () => {
-    toast({
-      title: "Funzionalità in arrivo",
-      description: "La generazione automatica dei contratti sarà disponibile presto.",
+  const generateZohoSignUrl = (clientData: ClientFormData) => {
+    const baseUrl = "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm";
+    const params = new URLSearchParams({
+      'i': '7857',
+      'recipient_name': clientData.companyName || '',
+      'recipient_email': clientData.email || '',
+      'e contrattuali del contratto di mediazione sottoscritto in data': clientData.contractDate || '',
+      'Compenso mediatore': clientData.mediatorCompensation || '',
+      'Euro': clientData.requestedCapital || '',
+      'Ragione sociale': clientData.companyName || '',
+      'Sede legale': `${clientData.legalAddress || ''}, ${clientData.legalZipCode || ''} ${clientData.legalCity || ''} (${clientData.legalProvince || ''})`,
+      'Telefono': clientData.phone || '',
+      'Fax': clientData.fax || '',
+      'Indirizzo email': clientData.email || '',
+      'PEC': clientData.pec || '',
+      'Partita IVA': clientData.vatNumber || '',
+      'Codice Fiscale': clientData.companyFiscalCode || '',
+      'Nome cognome': `${clientData.legalRepresentative?.firstName || ''} ${clientData.legalRepresentative?.lastName || ''}`,
+      'nome mediatore': 'Venetagroup S.r.l.',
+      'PRODOTTO FINANZIARIO RICHIESTO:': clientData.requestedProduct || '',
+      'CAPITALE RICHIESTO': clientData.requestedCapital || '',
+      'TIPOLOGIA TASSO': clientData.interestRateType || '',
+      'DURATA DEL FINANZIAMENTO': clientData.financingDuration || '',
+      '% mediatore': clientData.commission || '',
+      'Luogo e data': `${clientData.legalCity || ''}, ${clientData.contractDate || ''}`,
+      'Nome Cognome': `${clientData.legalRepresentative?.firstName || ''} ${clientData.legalRepresentative?.lastName || ''}`,
+      'Codice fiscale': clientData.legalRepresentative?.fiscalCode || '',
+      'Luogo e data di nascita': `${clientData.legalRepresentative?.birthPlace || ''}, ${clientData.legalRepresentative?.birthDate || ''}`,
+      'Indirizzo di residenza': clientData.legalRepresentative?.residenceAddress || '',
+      'CAP': clientData.legalRepresentative?.residenceZipCode || '',
+      'Comune': clientData.legalRepresentative?.residenceCity || '',
+      'Prov': clientData.legalRepresentative?.residenceProvince || '',
+      'Tipo documento identifi': clientData.legalRepresentative?.documentType || '',
+      'Numero documento': clientData.legalRepresentative?.documentNumber || '',
+      'Luogo e data rilascio': `${clientData.legalRepresentative?.documentIssuePlace || ''}, ${clientData.legalRepresentative?.documentIssueDate || ''}`,
+      'Autorit rilascio': clientData.legalRepresentative?.documentAuthority || '',
+      'Tipo documento identific.': clientData.legalRepresentative?.documentType || '',
+      'Autorita rilascio': clientData.legalRepresentative?.documentAuthority || '',
+      'Addetto di Venetagroup S.r.I. che ha raccolto le informazioni e innanzi al quale il/i dichiarante/': 'Venetagroup S.r.l.',
+      'cod. Fisc': clientData.companyFiscalCode || '',
+      'e': clientData.vatNumber || '',
+      'Cod. Fisc. e Part. IVA': `${clientData.companyFiscalCode || ''} - ${clientData.vatNumber || ''}`,
+      'con sede legale in': `${clientData.legalAddress || ''}, ${clientData.legalZipCode || ''} ${clientData.legalCity || ''} (${clientData.legalProvince || ''})`,
+      'in persona di': `${clientData.legalRepresentative?.firstName || ''} ${clientData.legalRepresentative?.lastName || ''}`,
+      'Per Venetagroup S.r.I. (Sig.': 'Venetagroup S.r.l.',
+      'Luogo e Data': `${clientData.legalCity || ''}, ${new Date().toLocaleDateString('it-IT')}`,
+      'Sig ../ra': `${clientData.legalRepresentative?.firstName || ''} ${clientData.legalRepresentative?.lastName || ''}`,
+      'Sig./ra': `${clientData.legalRepresentative?.firstName || ''} ${clientData.legalRepresentative?.lastName || ''}`,
+      'INDIRIZZO:': clientData.legalAddress || '',
+      'CODICE FISCALE,': clientData.companyFiscalCode || '',
+      'PRODOTTO': clientData.requestedProduct || '',
+      'RICHIEDENTE/I': clientData.companyName || ''
     });
+    
+    return `${baseUrl}?${params.toString()}`;
+  };
+
+  const handleContractGeneration = () => {
+    if (clientType === "azienda") {
+      const formData = form.getValues();
+      const contractUrl = generateZohoSignUrl(formData);
+      
+      // Apri l'URL in una nuova finestra
+      window.open(contractUrl, '_blank');
+      
+      toast({
+        title: "Contratto Generato",
+        description: "Il contratto è stato aperto in una nuova finestra di Zoho Sign.",
+      });
+    } else {
+      toast({
+        title: "Funzionalità in arrivo",
+        description: "La generazione contratti per persone fisiche sarà disponibile presto.",
+      });
+    }
   };
 
   const onSubmit = (data: ClientFormData) => {
@@ -202,6 +286,9 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
           <DialogTitle>
             {client ? "Modifica Cliente" : "Aggiungi Nuovo Cliente"}
           </DialogTitle>
+          <DialogDescription>
+            {client ? "Modifica i dettagli del cliente esistente" : "Inserisci i dettagli per un nuovo cliente"}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

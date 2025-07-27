@@ -83,6 +83,22 @@ export const clientFormSchema = z.object({
   companyName: z.string().optional(),
   vatNumber: z.string().optional(),
   companyFiscalCode: z.string().optional(),
+  
+  // Legal representative fields
+  repFirstName: z.string().optional(),
+  repLastName: z.string().optional(),
+  repFiscalCode: z.string().optional(),
+  repBirthPlace: z.string().optional(),
+  repBirthDate: z.string().optional(),
+  repResidenceAddress: z.string().optional(),
+  repResidenceZipCode: z.string().optional(),
+  repResidenceCity: z.string().optional(),
+  repResidenceProvince: z.string().optional(),
+  repDocumentType: z.string().optional(),
+  repDocumentNumber: z.string().optional(),
+  repDocumentAuthority: z.string().optional(),
+  repDocumentIssuePlace: z.string().optional(),
+  repDocumentIssueDate: z.string().optional(),
   // Company extended fields
   legalAddress: z.string().optional(),
   legalZipCode: z.string().optional(),
