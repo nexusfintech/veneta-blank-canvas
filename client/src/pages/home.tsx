@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Navigation } from "@/components/navigation";
+import { Navigation, SidebarNavigation } from "@/components/navigation";
 import { StatsCards } from "@/components/stats-cards";
 import { SearchFilters } from "@/components/search-filters";
 import { ClientsTable } from "@/components/clients-table";
@@ -132,45 +132,53 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <SidebarNavigation />
+      </div>
+      
+      {/* Mobile Navigation */}
       <Navigation />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Anagrafica Clienti</h2>
-              <p className="text-slate-600 mt-1">Gestisci le anagrafiche di persone fisiche e aziende</p>
+      <main className="flex-1 md:ml-64 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Page Header */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Anagrafica Clienti</h2>
+                <p className="text-slate-600 mt-1">Gestisci le anagrafiche di persone fisiche e aziende</p>
+              </div>
+              <Button onClick={handleOpenModal} className="flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>Nuovo Cliente</span>
+              </Button>
             </div>
-            <Button onClick={handleOpenModal} className="flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Nuovo Cliente</span>
-            </Button>
           </div>
+
+          {/* Stats Cards */}
+          <StatsCards />
+
+          {/* Search and Filters */}
+          <SearchFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            clientTypeFilter={clientTypeFilter}
+            onClientTypeChange={setClientTypeFilter}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+          />
+
+          {/* Clients Table */}
+          <ClientsTable
+            clients={clients}
+            onEdit={handleEditClient}
+            onDelete={handleDeleteClient}
+            isLoading={isLoading}
+          />
         </div>
-
-        {/* Stats Cards */}
-        <StatsCards />
-
-        {/* Search and Filters */}
-        <SearchFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          clientTypeFilter={clientTypeFilter}
-          onClientTypeChange={setClientTypeFilter}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-        />
-
-        {/* Clients Table */}
-        <ClientsTable
-          clients={clients}
-          onEdit={handleEditClient}
-          onDelete={handleDeleteClient}
-          isLoading={isLoading}
-        />
       </main>
 
       {/* Client Modal */}
