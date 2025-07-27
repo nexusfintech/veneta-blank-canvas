@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Upload, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation, SidebarNavigation } from "@/components/navigation";
@@ -21,6 +21,7 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Build query parameters
   const queryParams = new URLSearchParams();
@@ -131,6 +132,64 @@ export default function Home() {
     }
   };
 
+  // Excel import handler
+  const handleExcelImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      toast({
+        title: "Errore",
+        description: "Seleziona un file Excel valido (.xlsx o .xls)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append("excel", file);
+
+      const response = await fetch("/api/import-excel", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to import Excel file");
+      }
+
+      const result = await response.json();
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+
+      toast({
+        title: "Importazione completata",
+        description: `${result.imported} clienti importati con successo${result.errors > 0 ? ` (${result.errors} errori)` : ''}`,
+      });
+
+      if (result.errors > 0 && result.errorDetails) {
+        console.log("Import errors:", result.errorDetails);
+      }
+
+    } catch (error) {
+      console.error("Excel import error:", error);
+      toast({
+        title: "Errore nell'importazione",
+        description: "Non è stato possibile importare il file Excel. Riprova.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      event.target.value = "";
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Desktop Sidebar */}
@@ -151,10 +210,34 @@ export default function Home() {
                 <h2 className="text-2xl font-bold text-slate-900">Anagrafica Clienti</h2>
                 <p className="text-slate-600 mt-1">Gestisci le anagrafiche di persone fisiche e aziende</p>
               </div>
-              <Button onClick={handleOpenModal} className="flex items-center space-x-2">
-                <Plus className="h-4 w-4" />
-                <span>Nuovo Cliente</span>
-              </Button>
+              <div className="flex items-center space-x-3">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleExcelImport}
+                    className="hidden"
+                    disabled={isImporting}
+                  />
+                  <Button
+                    variant="outline"
+                    className="flex items-center space-x-2"
+                    disabled={isImporting}
+                  >
+                    {isImporting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileSpreadsheet className="h-4 w-4" />
+                    )}
+                    <span>{isImporting ? "Importando..." : "Importa Excel"}</span>
+                  </Button>
+                </label>
+                
+                <Button onClick={handleOpenModal} className="flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Nuovo Cliente</span>
+                </Button>
+              </div>
             </div>
           </div>
 

@@ -4,6 +4,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import multer from "multer";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import * as XLSX from "xlsx";
 import { storage } from "./storage";
 import { insertClientSchema, loginSchema, type User } from "@shared/schema";
 import { extractCompanyDataFromText } from "./openai";
@@ -46,10 +47,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-      if (file.mimetype === "application/pdf") {
+      if (file.mimetype === "application/pdf" || 
+          file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          file.mimetype === "application/vnd.ms-excel") {
         cb(null, true);
       } else {
-        cb(new Error("Only PDF files are allowed"));
+        cb(new Error("Only PDF and Excel files are allowed"));
       }
     },
   });
@@ -334,6 +337,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("PDF extraction error:", error);
       res.status(500).json({ 
         message: "Failed to extract data from PDF",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Excel import endpoint
+  app.post("/api/import-excel", requireAuth, upload.single("excel"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No Excel file provided" });
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      if (jsonData.length === 0) {
+        return res.status(400).json({ message: "No data found in Excel file" });
+      }
+
+      const userId = (req.user as any).id;
+      const importedClients = [];
+      const errors = [];
+
+      // Process each row
+      for (let i = 0; i < jsonData.length; i++) {
+        const row = jsonData[i] as any;
+        
+        try {
+          // Map Excel columns to client fields - adjust these based on your Excel structure
+          const clientData = {
+            type: row.Tipo?.toLowerCase() === 'azienda' ? 'azienda' : 'persona_fisica',
+            firstName: row.Nome || row.nome || '',
+            lastName: row.Cognome || row.cognome || '',
+            companyName: row.Azienda || row.azienda || row['Ragione Sociale'] || '',
+            fiscalCode: row['Codice Fiscale'] || row.codiceFiscale || '',
+            vatNumber: row['Partita IVA'] || row.partitaIVA || row.piva || '',
+            email: row.Email || row.email || '',
+            phone: row.Telefono || row.telefono || row.cellulare || '',
+            address: row.Indirizzo || row.indirizzo || '',
+            city: row.Citta || row.città || row.comune || '',
+            zipCode: row.CAP || row.cap || '',
+            province: row.Provincia || row.provincia || '',
+            notes: row.Note || row.note || '',
+            status: 'attivo',
+            ownerId: userId
+          };
+
+          // Validate required fields
+          if (clientData.type === 'persona_fisica' && (!clientData.firstName || !clientData.lastName)) {
+            errors.push(`Riga ${i + 1}: Nome e Cognome richiesti per persona fisica`);
+            continue;
+          }
+          
+          if (clientData.type === 'azienda' && !clientData.companyName) {
+            errors.push(`Riga ${i + 1}: Ragione Sociale richiesta per azienda`);
+            continue;
+          }
+
+          // Create client
+          const newClient = await storage.createClient(clientData);
+          importedClients.push(newClient);
+
+        } catch (error) {
+          errors.push(`Riga ${i + 1}: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+        }
+      }
+
+      res.json({
+        message: `Importazione completata. ${importedClients.length} clienti importati.`,
+        imported: importedClients.length,
+        errors: errors.length,
+        errorDetails: errors
+      });
+
+    } catch (error) {
+      console.error("Excel import error:", error);
+      res.status(500).json({ 
+        message: "Failed to import Excel file",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
