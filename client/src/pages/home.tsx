@@ -89,9 +89,13 @@ export default function Home() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/clients/${id}`);
+      console.log("Deleting client with ID:", id);
+      const response = await apiRequest("DELETE", `/api/clients/${id}`);
+      console.log("Delete response:", response);
+      return response;
     },
     onSuccess: () => {
+      console.log("Client deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
@@ -100,6 +104,7 @@ export default function Home() {
       });
     },
     onError: (error: any) => {
+      console.error("Delete error:", error);
       toast({
         title: "Errore",
         description: error.message || "Errore durante l'eliminazione del cliente.",
@@ -127,8 +132,12 @@ export default function Home() {
   };
 
   const handleDeleteClient = (id: string) => {
-    if (confirm("Sei sicuro di voler eliminare questo cliente?")) {
+    console.log("handleDeleteClient called with ID:", id);
+    if (window.confirm("Sei sicuro di voler eliminare questo cliente?")) {
+      console.log("User confirmed deletion, calling mutation");
       deleteMutation.mutate(id);
+    } else {
+      console.log("User cancelled deletion");
     }
   };
 

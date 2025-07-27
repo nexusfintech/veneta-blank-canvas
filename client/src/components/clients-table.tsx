@@ -241,6 +241,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                           size="sm"
                           className="text-red-600 hover:text-red-900"
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             onDelete(client.id);
                           }}
