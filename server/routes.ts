@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import multer from "multer";
-import * as pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse";
 import { storage } from "./storage";
 import { insertClientSchema, loginSchema, type User } from "@shared/schema";
 import { extractCompanyDataFromText } from "./openai";
