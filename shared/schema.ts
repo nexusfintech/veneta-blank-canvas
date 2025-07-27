@@ -3,7 +3,7 @@ import { pgTable, text, varchar, date, boolean, decimal, json } from "drizzle-or
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Legal representative data structure
+// Legal representative data structure (Legale rappresentante o esecutore)
 export const legalRepresentativeSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -14,38 +14,39 @@ export const legalRepresentativeSchema = z.object({
   residenceZipCode: z.string().optional(),
   residenceCity: z.string().optional(),
   residenceProvince: z.string().optional(),
-  documentType: z.string().optional(),
-  documentNumber: z.string().optional(),
-  documentAuthority: z.string().optional(),
-  documentIssuePlace: z.string().optional(),
-  documentIssueDate: z.string().optional(),
-  isPoliticallyExposed: z.boolean().default(false),
-  benefitsPublicFunds: z.boolean().default(false),
-  hasApicalRoles: z.boolean().default(false),
-  hasPublicCharges: z.boolean().default(false),
-  hasCriminalRecord: z.boolean().default(false),
+  documentType: z.string().optional(), // tipo documento
+  documentNumber: z.string().optional(), // numero documento
+  documentAuthority: z.string().optional(), // autorità rilascio
+  documentIssuePlace: z.string().optional(), // luogo rilascio
+  documentIssueDate: z.string().optional(), // data rilascio
+  isPoliticallyExposed: z.boolean().default(false), // persona politicamente esposta
+  benefitsPublicFunds: z.boolean().default(false), // beneficia di fondi pubblici
+  hasApicalRoles: z.boolean().default(false), // ruoli apicali in enti che erogano fondi pubblici
+  hasPublicCharges: z.boolean().default(false), // importanti cariche pubbliche locali
+  hasCriminalRecord: z.boolean().default(false), // condanne/pendenze penali
 });
 
-// Beneficial owner data structure
+// Beneficial owner data structure (Titolari effettivi)
 export const beneficialOwnerSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  fiscalCode: z.string().optional(),
   birthPlace: z.string().optional(),
   birthDate: z.string().optional(),
   residenceAddress: z.string().optional(),
   residenceZipCode: z.string().optional(),
   residenceCity: z.string().optional(),
   residenceProvince: z.string().optional(),
-  documentType: z.string().optional(),
-  documentNumber: z.string().optional(),
-  documentAuthority: z.string().optional(),
-  documentIssuePlace: z.string().optional(),
-  documentIssueDate: z.string().optional(),
-  isPoliticallyExposed: z.boolean().default(false),
-  hasPublicCharges: z.boolean().default(false),
-  hasOtherRoles: z.boolean().default(false),
-  benefitsPublicFunds: z.boolean().default(false),
-  ownershipReason: z.string().optional(), // ">25%", "<25%", etc.
+  documentType: z.string().optional(), // tipo documento
+  documentNumber: z.string().optional(), // numero documento
+  documentAuthority: z.string().optional(), // autorità rilascio
+  documentIssuePlace: z.string().optional(), // luogo rilascio
+  documentIssueDate: z.string().optional(), // data rilascio
+  isPoliticallyExposed: z.boolean().default(false), // persona politicamente esposta
+  hasPublicCharges: z.boolean().default(false), // cariche pubbliche locali
+  hasOtherRoles: z.boolean().default(false), // altre cariche
+  benefitsPublicFunds: z.boolean().default(false), // beneficia di fondi pubblici
+  ownershipReason: z.string().optional(), // motivazione: ">25%", "<25%", etc.
 });
 
 export const clients = pgTable("clients", {

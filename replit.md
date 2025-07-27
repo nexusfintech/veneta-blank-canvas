@@ -28,19 +28,32 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### Database Schema
-The application uses a single `clients` table with the following structure:
+The application uses a comprehensive `clients` table with contract-specific fields:
 - **id**: Primary key (UUID)
 - **type**: Client type ("persona_fisica" or "azienda")
 - **Individual fields**: firstName, lastName, fiscalCode, birthDate
-- **Company fields**: companyName, vatNumber, companyFiscalCode
+- **Company basic fields**: companyName, vatNumber, companyFiscalCode
+- **Company extended fields**: legalAddress, legalZipCode, legalCity, legalProvince, fax, pec
+- **Legal representative**: Complete personal data, residence, documents, PEP status, public roles
+- **Beneficial owners**: Multiple owners with ownership percentages and compliance data
+- **Geographic data**: mainActivityProvince, relationshipDestinationProvince, counterpartyAreaProvince
+- **Product data**: requestedProduct, requestedCapital, financingDuration, interestRateType
+- **Compensation**: mediatorCompensation, commission, instructionFees, contractDate
 - **Contact fields**: email, phone, address, zipCode, city, province
 - **Meta fields**: status, notes
 
 ### Frontend Components
-- **Home Page**: Main dashboard with client management interface
-- **ClientModal**: Form modal for creating/editing clients with dynamic field validation
-- **ClientsTable**: Data table with CRUD operations and responsive design
-- **SearchFilters**: Search and filter functionality
+- **Home Page**: Main dashboard with sidebar navigation and client management interface
+- **SidebarNavigation**: Collapsible sidebar for desktop navigation with section icons
+- **ClientModal**: Comprehensive form modal with contract-specific sections:
+  - Dati Aziendali (Company Data)
+  - Legale Rappresentante (Legal Representative) 
+  - Titolari Effettivi (Beneficial Owners)
+  - Area Geografica e Attività (Geographic Area & Activity)
+  - Prodotto Richiesto (Requested Product)
+  - Compenso e Oneri (Compensation & Fees)
+- **ClientsTable**: Enhanced data table with clickable rows and contract generation placeholder
+- **SearchFilters**: Advanced search and filter functionality
 - **StatsCards**: Dashboard statistics display
 
 ### API Endpoints
