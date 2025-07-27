@@ -41,6 +41,7 @@ interface ClientModalProps {
 export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientModalProps) {
   const { toast } = useToast();
   const [clientType, setClientType] = useState<"persona_fisica" | "azienda">("persona_fisica");
+  const [generatedUrl, setGeneratedUrl] = useState<string>("");
   const [openSections, setOpenSections] = useState({
     personal: true,
     residence: false,
@@ -260,12 +261,11 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
       const formData = form.getValues();
       const contractUrl = generateZohoSignUrl(formData);
       
-      // Apri l'URL in una nuova finestra
-      window.open(contractUrl, '_blank');
+      setGeneratedUrl(contractUrl);
       
       toast({
-        title: "Contratto Generato",
-        description: "Il contratto è stato aperto in una nuova finestra di Zoho Sign.",
+        title: "URL Contratto Generato",
+        description: "L'URL del contratto è stato generato e visualizzato sotto il pulsante.",
       });
     } else {
       toast({
@@ -1459,16 +1459,47 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
 
             <div className="flex justify-between items-center border-t border-slate-200 pt-6">
               <div className="flex items-center space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleContractGeneration}
-                  className="bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Genera Contratto
-                </Button>
-                <span className="text-xs text-slate-500">*Funzionalità in arrivo</span>
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleContractGeneration}
+                    className="bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Genera Contratto
+                  </Button>
+                  {generatedUrl && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-green-800">URL Contratto Generato:</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(generatedUrl, '_blank')}
+                          className="text-green-700 border-green-300 hover:bg-green-100"
+                        >
+                          Apri in Zoho Sign
+                        </Button>
+                      </div>
+                      <div className="mt-2 p-2 bg-white border rounded text-xs font-mono break-all text-slate-600">
+                        {generatedUrl}
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigator.clipboard.writeText(generatedUrl)}
+                          className="text-green-700 border-green-300 hover:bg-green-100"
+                        >
+                          Copia URL
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center space-x-4">
                 <Button type="button" variant="outline" onClick={onClose}>

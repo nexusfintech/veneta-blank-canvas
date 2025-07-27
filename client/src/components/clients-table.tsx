@@ -1,4 +1,5 @@
-import { Eye, Edit, FileText, Trash2, User, Building } from "lucide-react";
+import { useState } from "react";
+import { Eye, Edit, FileText, Trash2, User, Building, Copy, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ interface ClientsTableProps {
 
 export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: ClientsTableProps) {
   const { toast } = useToast();
+  const [generatedUrls, setGeneratedUrls] = useState<Record<string, string>>({});
 
   const generateZohoSignUrl = (client: Client) => {
     const baseUrl = "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm";
@@ -77,12 +79,22 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
   const handleContractGeneration = (client: Client) => {
     const contractUrl = generateZohoSignUrl(client);
     
-    // Apri l'URL in una nuova finestra
-    window.open(contractUrl, '_blank');
+    setGeneratedUrls(prev => ({
+      ...prev,
+      [client.id]: contractUrl
+    }));
     
     toast({
-      title: "Contratto Generato",
-      description: `Il contratto per ${client.type === 'azienda' ? client.companyName : `${client.firstName} ${client.lastName}`} è stato aperto in Zoho Sign.`,
+      title: "URL Contratto Generato",
+      description: `L'URL del contratto per ${client.type === 'azienda' ? client.companyName : `${client.firstName} ${client.lastName}`} è stato generato.`,
+    });
+  };
+
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "URL Copiato",
+      description: "L'URL è stato copiato negli appunti.",
     });
   };
 
@@ -132,7 +144,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                   </TableCell>
                 </TableRow>
               ) : (
-                clients.map((client) => (
+                clients.flatMap((client) => [
                   <TableRow 
                     key={client.id} 
                     className="hover:bg-slate-50 cursor-pointer transition-colors"
@@ -228,8 +240,42 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))
+                  </TableRow>,
+                  ...(generatedUrls[client.id] ? [
+                    <TableRow key={`${client.id}-url`}>
+                      <TableCell colSpan={6} className="bg-green-50 border-l-4 border-green-400">
+                        <div className="py-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-green-800">URL Contratto Zoho Sign Generato:</span>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => copyToClipboard(generatedUrls[client.id])}
+                                className="text-green-700 border-green-300 hover:bg-green-100"
+                              >
+                                <Copy className="h-3 w-3 mr-1" />
+                                Copia
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(generatedUrls[client.id], '_blank')}
+                                className="text-green-700 border-green-300 hover:bg-green-100"
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                Apri
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="p-2 bg-white border border-green-200 rounded text-xs font-mono break-all text-slate-600 max-h-20 overflow-y-auto">
+                            {generatedUrls[client.id]}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ] : [])
+                ])
               )}
             </TableBody>
           </Table>
