@@ -1,14 +1,110 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
-import { insertClientSchema } from "@shared/schema";
+import { insertClientSchema, loginSchema, type User } from "@shared/schema";
 import { z } from "zod";
 
+// Extend Express session type
+declare module "express-session" {
+  interface SessionData {
+    userId?: string;
+    user?: User;
+  }
+}
+
+// Authentication middleware
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  next();
+}
+
+// Admin middleware
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.user || req.session.user.role !== "admin") {
+    return res.status(403).json({ message: "Admin access required" });
+  }
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all clients
-  app.get("/api/clients", async (req, res) => {
+  // Session configuration
+  const pgStore = connectPg(session);
+  app.use(session({
+    store: new pgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: false,
+      tableName: "sessions",
+    }),
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  }));
+
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const credentials = loginSchema.parse(req.body);
+      const user = await storage.authenticateUser(credentials);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Email o password non corretti" });
+      }
+
+      req.session.userId = user.id;
+      req.session.user = user;
+      
+      res.json({ message: "Login successful", user: { ...user, password: undefined } });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Dati non validi", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Errore durante il logout" });
+      }
+      res.json({ message: "Logout successful" });
+    });
+  });
+
+  app.get("/api/auth/user", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    try {
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        req.session.destroy(() => {});
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      res.json({ ...user, password: undefined });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  // Get all clients (protected route - admin can see all, users see limited data)
+  app.get("/api/clients", requireAuth, async (req, res) => {
     try {
       const { search, type, status } = req.query;
+      const userRole = req.session.user?.role;
 
       let clients;
       if (search) {
@@ -25,27 +121,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // If user is not admin, hide contact information (email, phone, address)
+      if (userRole !== "admin") {
+        clients = clients.map(client => ({
+          ...client,
+          email: undefined,
+          phone: undefined,
+          address: undefined,
+          zipCode: undefined,
+          city: undefined,
+          province: undefined,
+          legalAddress: undefined,
+          legalZipCode: undefined,
+          legalCity: undefined,
+          legalProvince: undefined,
+          fax: undefined,
+          pec: undefined,
+        }));
+      }
+
       res.json(clients);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch clients" });
     }
   });
 
-  // Get client by ID
-  app.get("/api/clients/:id", async (req, res) => {
+  // Get client by ID (protected route - admin can see all, users see limited data)
+  app.get("/api/clients/:id", requireAuth, async (req, res) => {
     try {
       const client = await storage.getClient(req.params.id);
       if (!client) {
         return res.status(404).json({ message: "Client not found" });
       }
+
+      const userRole = req.session.user?.role;
+      
+      // If user is not admin, hide contact information
+      if (userRole !== "admin") {
+        const limitedClient = {
+          ...client,
+          email: undefined,
+          phone: undefined,
+          address: undefined,
+          zipCode: undefined,
+          city: undefined,
+          province: undefined,
+          legalAddress: undefined,
+          legalZipCode: undefined,
+          legalCity: undefined,
+          legalProvince: undefined,
+          fax: undefined,
+          pec: undefined,
+        };
+        return res.json(limitedClient);
+      }
+
       res.json(client);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch client" });
     }
   });
 
-  // Create new client
-  app.post("/api/clients", async (req, res) => {
+  // Create new client (protected route)
+  app.post("/api/clients", requireAuth, async (req, res) => {
     try {
       const validatedData = insertClientSchema.parse(req.body);
       const client = await storage.createClient(validatedData);
@@ -61,8 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update client
-  app.put("/api/clients/:id", async (req, res) => {
+  // Update client (protected route)
+  app.put("/api/clients/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertClientSchema.partial().parse(req.body);
       const client = await storage.updateClient(req.params.id, validatedData);
@@ -81,8 +219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete client
-  app.delete("/api/clients/:id", async (req, res) => {
+  // Delete client (protected route)
+  app.delete("/api/clients/:id", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteClient(req.params.id);
       if (!success) {
@@ -94,8 +232,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get stats
-  app.get("/api/stats", async (req, res) => {
+  // Get stats (protected route)
+  app.get("/api/stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getStats();
       res.json(stats);

@@ -5,14 +5,18 @@ import {
   X, 
   Users, 
   FileText, 
-  BarChart3, 
   Settings,
   Handshake,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/useAuth";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const navigationItems = [
   {
@@ -28,12 +32,6 @@ const navigationItems = [
     description: "Gestione contratti"
   },
   {
-    name: "Statistiche",
-    href: "/stats",
-    icon: BarChart3,
-    description: "Dashboard e report"
-  },
-  {
     name: "Impostazioni",
     href: "/settings",
     icon: Settings,
@@ -45,6 +43,30 @@ const navigationItems = [
 export function SidebarNavigation() {
   const [location] = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/auth/logout", {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Logout effettuato",
+        description: "Sei stato disconnesso con successo",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Errore durante la disconnessione",
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
@@ -100,17 +122,37 @@ export function SidebarNavigation() {
 
       {/* User Profile */}
       <div className="p-4 border-t border-slate-200">
-        <div className={`flex items-center ${isCollapsed ? "justify-center" : "space-x-3"}`}>
+        <div className={`flex items-center ${isCollapsed ? "justify-center" : "space-x-3"} mb-3`}>
           <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium">MR</span>
+            <span className="text-sm font-medium">
+              {user?.firstName?.[0]}{user?.lastName?.[0]}
+            </span>
           </div>
           {!isCollapsed && (
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-900">Marco Rossi</p>
-              <p className="text-xs text-slate-500">Mediatore Creditizio</p>
+              <p className="text-sm font-medium text-slate-900">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-slate-500">
+                {user?.role === "admin" ? "Amministratore" : "Utente"}
+              </p>
             </div>
           )}
         </div>
+        
+        {/* Logout Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+          className={`w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-100 ${
+            isCollapsed ? "px-2" : "px-3"
+          }`}
+        >
+          <LogOut className={`h-4 w-4 ${isCollapsed ? "" : "mr-2"}`} />
+          {!isCollapsed && "Esci"}
+        </Button>
       </div>
     </div>
   );

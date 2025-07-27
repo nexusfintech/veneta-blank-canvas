@@ -1,8 +1,10 @@
-import { type Client, type InsertClient, clients } from "@shared/schema";
+import { type Client, type InsertClient, clients, type User, type InsertUser, type LoginData, users } from "@shared/schema";
 import { db } from "./db";
 import { eq, or, ilike } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
+  // Client operations
   getClient(id: string): Promise<Client | undefined>;
   getAllClients(): Promise<Client[]>;
   searchClients(query: string): Promise<Client[]>;
@@ -16,6 +18,12 @@ export interface IStorage {
     companies: number;
     activeContracts: number;
   }>;
+  
+  // User operations
+  getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  authenticateUser(credentials: LoginData): Promise<User | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -103,6 +111,48 @@ export class DatabaseStorage implements IStorage {
       companies,
       activeContracts: Math.floor(activeClients * 0.6), // Rough estimate
     };
+  }
+
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        password: hashedPassword,
+      })
+      .returning();
+    
+    return user;
+  }
+
+  async authenticateUser(credentials: LoginData): Promise<User | null> {
+    const user = await this.getUserByEmail(credentials.email);
+    
+    if (!user) {
+      return null;
+    }
+
+    const isValidPassword = await bcrypt.compare(credentials.password, user.password);
+    
+    if (!isValidPassword) {
+      return null;
+    }
+
+    return user;
   }
 }
 

@@ -8,6 +8,19 @@ This is a full-stack web application for managing clients, built with a React fr
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### Authentication System Implementation (2025-01-27)
+- **Added PostgreSQL-based authentication system** replacing the previous system
+- **Removed Statistics menu** from navigation as requested
+- **Created two user accounts:**
+  - Admin: mauro.frasson@venetagroup.com (password: Admin123!)
+  - Regular user: app@nexusfintech.it (password: User123!)
+- **Role-based access control:** Admin users can see all client contact information (email, phone, addresses), while regular users see limited data without contact details
+- **Session management:** Using express-session with PostgreSQL store
+- **Secure login page** with form validation and password visibility toggle
+- **Automatic logout functionality** in navigation sidebar
+
 ## System Architecture
 
 ### Frontend Architecture
@@ -28,7 +41,7 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### Database Schema
-The application uses a comprehensive `clients` table with contract-specific fields:
+The application uses a comprehensive `clients` table with contract-specific fields, plus authentication tables:
 - **id**: Primary key (UUID)
 - **type**: Client type ("persona_fisica" or "azienda")
 - **Individual fields**: firstName, lastName, fiscalCode, birthDate
@@ -41,6 +54,10 @@ The application uses a comprehensive `clients` table with contract-specific fiel
 - **Compensation**: mediatorCompensation, commission, instructionFees, contractDate
 - **Contact fields**: email, phone, address, zipCode, city, province
 - **Meta fields**: status, notes
+
+**Authentication tables:**
+- **users**: id, email, password (hashed), role (admin/user), firstName, lastName, timestamps
+- **sessions**: sid, sess (JSON), expire (for session management)
 
 ### Frontend Components
 - **Home Page**: Main dashboard with sidebar navigation and client management interface
@@ -57,8 +74,15 @@ The application uses a comprehensive `clients` table with contract-specific fiel
 - **StatsCards**: Dashboard statistics display
 
 ### API Endpoints
-- `GET /api/clients` - Retrieve clients with optional search and filtering
-- `GET /api/clients/:id` - Retrieve specific client
+
+**Authentication endpoints:**
+- `POST /api/auth/login` - User login with email/password
+- `POST /api/auth/logout` - User logout and session destruction
+- `GET /api/auth/user` - Get current authenticated user info
+
+**Client management endpoints (all protected by authentication):**
+- `GET /api/clients` - Retrieve clients (admin sees all data, users see limited data without contact info)
+- `GET /api/clients/:id` - Retrieve specific client (role-based data filtering)
 - `POST /api/clients` - Create new client
 - `PUT /api/clients/:id` - Update existing client
 - `DELETE /api/clients/:id` - Delete client
