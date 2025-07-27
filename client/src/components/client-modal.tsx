@@ -12,7 +12,9 @@ import {
   Building,
   CreditCard,
   MapPin,
-  Euro
+  Euro,
+  Upload,
+  Loader2
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,7 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
   const { toast } = useToast();
   const [clientType, setClientType] = useState<"persona_fisica" | "azienda">("persona_fisica");
   const [generatedUrl, setGeneratedUrl] = useState<string>("");
+  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const [openSections, setOpenSections] = useState({
     personal: true,
     residence: false,
@@ -145,6 +148,96 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
     control: form.control,
     name: "beneficialOwners"
   });
+
+  // PDF upload and extraction handler
+  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast({
+        title: "Errore",
+        description: "Seleziona un file PDF valido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExtractingPdf(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append("pdf", file);
+
+      const response = await fetch("/api/extract-pdf", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to extract data from PDF");
+      }
+
+      const result = await response.json();
+      const extractedData = result.data;
+
+      // Pre-fill form fields with extracted data
+      if (extractedData.companyName) {
+        form.setValue("companyName", extractedData.companyName);
+      }
+      if (extractedData.vatNumber) {
+        form.setValue("vatNumber", extractedData.vatNumber);
+      }
+      if (extractedData.companyFiscalCode) {
+        form.setValue("companyFiscalCode", extractedData.companyFiscalCode);
+      }
+      if (extractedData.legalAddress) {
+        form.setValue("legalAddress", extractedData.legalAddress);
+      }
+      if (extractedData.legalZipCode) {
+        form.setValue("legalZipCode", extractedData.legalZipCode);
+      }
+      if (extractedData.legalCity) {
+        form.setValue("legalCity", extractedData.legalCity);
+      }
+      if (extractedData.legalProvince) {
+        form.setValue("legalProvince", extractedData.legalProvince);
+      }
+      if (extractedData.phone) {
+        form.setValue("phone", extractedData.phone);
+      }
+      if (extractedData.email) {
+        form.setValue("email", extractedData.email);
+      }
+      if (extractedData.pec) {
+        form.setValue("pec", extractedData.pec);
+      }
+
+      toast({
+        title: "Dati estratti con successo",
+        description: "I campi sono stati precompilati automaticamente. Verifica e modifica se necessario.",
+      });
+
+      // Open relevant sections to show extracted data
+      setOpenSections(prev => ({
+        ...prev,
+        company: true,
+      }));
+
+    } catch (error) {
+      console.error("PDF extraction error:", error);
+      toast({
+        title: "Errore nell'estrazione",
+        description: "Non è stato possibile estrarre i dati dal PDF. Verifica che il file sia leggibile.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExtractingPdf(false);
+      // Reset file input
+      event.target.value = "";
+    }
+  };
 
   useEffect(() => {
     if (client) {
@@ -751,6 +844,45 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
                     <ChevronDown className={`h-5 w-5 transition-transform ${openSections.company ? 'rotate-180' : ''}`} />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-4 pt-4">
+                    {/* PDF Upload Section */}
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          <h5 className="font-medium text-blue-900">Carica Documento Aziendale</h5>
+                        </div>
+                      </div>
+                      <p className="text-sm text-blue-700 mb-3">
+                        Carica un documento PDF (visura camerale, atto costitutivo, ecc.) per precompilare automaticamente i dati aziendali.
+                      </p>
+                      <div className="flex items-center space-x-3">
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={handlePdfUpload}
+                            className="hidden"
+                            disabled={isExtractingPdf}
+                          />
+                          <div className="flex items-center space-x-2 px-4 py-2 bg-white border border-blue-300 rounded-md hover:bg-blue-50 transition-colors">
+                            {isExtractingPdf ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                            ) : (
+                              <Upload className="h-4 w-4 text-blue-600" />
+                            )}
+                            <span className="text-sm text-blue-700">
+                              {isExtractingPdf ? "Elaborazione..." : "Seleziona PDF"}
+                            </span>
+                          </div>
+                        </label>
+                        {isExtractingPdf && (
+                          <span className="text-sm text-blue-600">
+                            Estrazione dati in corso...
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
                     <FormField
                       control={form.control}
                       name="companyName"

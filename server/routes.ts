@@ -2,8 +2,11 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import multer from "multer";
+import * as pdfParse from "pdf-parse";
 import { storage } from "./storage";
 import { insertClientSchema, loginSchema, type User } from "@shared/schema";
+import { extractCompanyDataFromText } from "./openai";
 import { z } from "zod";
 
 // Extend Express session type
@@ -36,6 +39,21 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Multer configuration for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === "application/pdf") {
+        cb(null, true);
+      } else {
+        cb(new Error("Only PDF files are allowed"));
+      }
+    },
+  });
+
   // Session configuration
   const pgStore = connectPg(session);
   app.use(session({
@@ -278,6 +296,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // PDF upload and data extraction endpoint
+  app.post("/api/extract-pdf", requireAuth, upload.single("pdf"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No PDF file provided" });
+      }
+
+      // Extract text from PDF
+      const pdfData = await pdfParse(req.file.buffer);
+      const extractedText = pdfData.text;
+
+      if (!extractedText.trim()) {
+        return res.status(400).json({ message: "Could not extract text from PDF" });
+      }
+
+      // Use OpenAI to extract company data
+      const extractedData = await extractCompanyDataFromText(extractedText);
+
+      res.json({
+        message: "Data extracted successfully",
+        data: extractedData,
+        extractedText: extractedText.substring(0, 1000) + "..." // First 1000 chars for debugging
+      });
+    } catch (error) {
+      console.error("PDF extraction error:", error);
+      res.status(500).json({ 
+        message: "Failed to extract data from PDF",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
