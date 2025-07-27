@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import multer from "multer";
-// Dynamic import for pdf-parse to handle CommonJS module
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { storage } from "./storage";
 import { insertClientSchema, loginSchema, type User } from "@shared/schema";
 import { extractCompanyDataFromText } from "./openai";
@@ -306,10 +306,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No PDF file provided" });
       }
 
-      // Extract text from PDF - dynamic import for CommonJS compatibility
-      const pdfParse = (await import("pdf-parse")).default;
-      const pdfData = await pdfParse(req.file.buffer);
-      const extractedText = pdfData.text;
+      // Extract text from PDF using pdfjs-dist
+      const pdfData = new Uint8Array(req.file.buffer);
+      const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+      
+      let extractedText = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(" ");
+        extractedText += pageText + "\n";
+      }
 
       if (!extractedText.trim()) {
         return res.status(400).json({ message: "Could not extract text from PDF" });
