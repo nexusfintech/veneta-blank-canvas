@@ -359,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No data found in Excel file" });
       }
 
-      const userId = (req.user as any).id;
+      const userId = req.session.userId!;
       const importedClients = [];
       const errors = [];
 

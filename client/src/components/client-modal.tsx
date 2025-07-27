@@ -293,41 +293,12 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
   };
 
   const generateZohoSignUrl = (clientData: ClientFormData) => {
-    return "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm?i=7857";,
-      'Luogo e data': `${clientData.legalCity || ' '}, ${clientData.contractDate || ' '}`,
-      'Nome Cognome': `${clientData.legalRepresentative?.firstName || ' '} ${clientData.legalRepresentative?.lastName || ' '}`,
-      'Codice fiscale': clientData.legalRepresentative?.fiscalCode || ' ',
-      'Luogo e data di nascita': `${clientData.legalRepresentative?.birthPlace || ' '}, ${clientData.legalRepresentative?.birthDate || ' '}`,
-      'Indirizzo di residenza': clientData.legalRepresentative?.residenceAddress || ' ',
-      'CAP': clientData.legalRepresentative?.residenceZipCode || ' ',
-      'Comune': clientData.legalRepresentative?.residenceCity || ' ',
-      'Prov': clientData.legalRepresentative?.residenceProvince || ' ',
-      'Tipo documento identifi': clientData.legalRepresentative?.documentType || ' ',
-      'Numero documento': clientData.legalRepresentative?.documentNumber || ' ',
-      'Luogo e data rilascio': `${clientData.legalRepresentative?.documentIssuePlace || ' '}, ${clientData.legalRepresentative?.documentIssueDate || ' '}`,
-      'Autorit rilascio': clientData.legalRepresentative?.documentAuthority || ' ',
-      'Tipo documento identific.': clientData.legalRepresentative?.documentType || ' ',
-      'Autorita rilascio': clientData.legalRepresentative?.documentAuthority || ' ',
-      'Addetto di Venetagroup S.r.I. che ha raccolto le informazioni e innanzi al quale il/i dichiarante/': 'Venetagroup S.r.l.',
-      'cod. Fisc': clientData.companyFiscalCode || ' ',
-      'e': clientData.vatNumber || ' ',
-      'Cod. Fisc. e Part. IVA': `${clientData.companyFiscalCode || ' '} - ${clientData.vatNumber || ' '}`,
-      'con sede legale in': `${clientData.legalAddress || ' '}, ${clientData.legalZipCode || ' '} ${clientData.legalCity || ' '} (${clientData.legalProvince || ' '})`,
-      'in persona di': `${clientData.legalRepresentative?.firstName || ' '} ${clientData.legalRepresentative?.lastName || ' '}`,
-      'Per Venetagroup S.r.I. (Sig.': 'Venetagroup S.r.l.',
-      'Luogo e Data': `${clientData.legalCity || ' '}, ${new Date().toLocaleDateString('it-IT')}`,
-      'Sig ../ra': `${clientData.legalRepresentative?.firstName || ' '} ${clientData.legalRepresentative?.lastName || ' '}`,
-      'Sig./ra': `${clientData.legalRepresentative?.firstName || ' '} ${clientData.legalRepresentative?.lastName || ' '}`,
-      'INDIRIZZO:': clientData.legalAddress || ' ',
-      'CODICE FISCALE,': clientData.companyFiscalCode || ' ',
-      'PRODOTTO': clientData.requestedProduct || ' ',
-      'RICHIEDENTE/I': clientData.companyName || ' ',
-      // Campi aggiuntivi per completezza del contratto
-      'provincia o Stato estero di svolgimento principale attività': clientData.mainActivityProvince || ' ',
-      'provincia/stato estero di destinazione del rapporto': clientData.relationshipDestinationProvince || ' ',
-      'provincia/stato area controparte': clientData.counterpartyAreaProvince || ' ',
-      'attività professionale svolta dal cliente': clientData.professionalActivity || ' ',
-      };
+    // Base URL for Zoho Sign
+    const baseUrl = "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm?i=7857";
+    
+    // For now, return the base URL
+    // In the future, this could be enhanced to include pre-filled data
+    return baseUrl;
   };
 
   const handleContractGeneration = () => {
@@ -1159,23 +1130,11 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name="repDocumentExpiryDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Data Scadenza</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {/* Document expiry date removed - not in schema */}
                       </div>
                       <FormField
                         control={form.control}
-                        name="repDocumentIssuedBy"
+                        name="documentIssuedBy"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Rilasciato da</FormLabel>
@@ -1190,48 +1149,10 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
                     <div className="space-y-4">
                       <h5 className="font-medium text-slate-800">Status e Cariche</h5>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="repIsPep"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                              <div className="space-y-0.5">
-                                <FormLabel>Persona Esposta Politicamente (PEP)</FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="repHasPublicRoles"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                              <div className="space-y-0.5">
-                                <FormLabel>Cariche Pubbliche</FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                        {/* Legal representative PEP status - moved to legalRepresentative object */}
+                        {/* Legal representative public roles - moved to legalRepresentative object */}
                       </div>
-                      <FormField
-                        control={form.control}
-                        name="repPublicRoleDetails"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Dettagli Cariche Pubbliche</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} placeholder="Specificare cariche pubbliche ricoperte..." />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {/* Legal representative public role details - moved to legalRepresentative object */}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
@@ -1250,7 +1171,19 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
                         <FormItem>
                           <FormLabel>Elenco Titolari Effettivi (JSON)</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder='[{"name": "Mario Rossi", "fiscalCode": "RSSMRA85M01H501Z", "ownershipPercentage": 50, "isPep": false}]' rows={6} />
+                            <Textarea 
+                              value={typeof field.value === 'string' ? field.value : JSON.stringify(field.value || [], null, 2)}
+                              onChange={(e) => {
+                                try {
+                                  const parsed = JSON.parse(e.target.value);
+                                  field.onChange(parsed);
+                                } catch {
+                                  field.onChange(e.target.value);
+                                }
+                              }}
+                              placeholder='[{"firstName": "Mario", "lastName": "Rossi", "fiscalCode": "RSSMRA85M01H501Z", "ownershipReason": ">25%", "isPoliticallyExposed": false}]' 
+                              rows={6} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
