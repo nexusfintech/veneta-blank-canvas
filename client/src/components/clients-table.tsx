@@ -138,20 +138,21 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
             <TableHeader>
               <TableRow className="bg-slate-50">
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Cliente</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo Cliente</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Prodotto</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Importo</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Codice Fiscale/P.IVA</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Contatti</TableHead>
                 {user?.role === "admin" && (
-                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Proprietario</TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Proprietario</TableHead>
                 )}
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Stato</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={user?.role === "admin" ? 7 : 6} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={user?.role === "admin" ? 8 : 7} className="text-center py-8 text-slate-500">
                     Nessun cliente trovato
                   </TableCell>
                 </TableRow>
@@ -189,6 +190,14 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-slate-900">
+                      <div className="font-medium">{client.requestedProduct || "N/A"}</div>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-900">
+                      <div className="font-medium">
+                        {client.requestedCapital ? `€ ${parseInt(client.requestedCapital).toLocaleString('it-IT')}` : "N/A"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-900">
                       {client.type === "persona_fisica" ? client.fiscalCode : client.vatNumber}
                     </TableCell>
                     <TableCell className="text-sm text-slate-500">
@@ -196,16 +205,10 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                       <div>{client.city}</div>
                     </TableCell>
                     {user?.role === "admin" && (
-                      <TableCell className="text-sm text-slate-500">
-                        <div>{(client as any).creatorName || "N/A"}</div>
-                        <div className="text-xs">{(client as any).creatorEmail || ""}</div>
+                      <TableCell className="text-sm text-slate-500 w-24">
+                        <div className="truncate">{(client as any).creatorName || "N/A"}</div>
                       </TableCell>
                     )}
-                    <TableCell>
-                      <Badge variant={client.status === "attivo" ? "default" : "secondary"}>
-                        {client.status === "attivo" ? "Attivo" : "Inattivo"}
-                      </Badge>
-                    </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Button

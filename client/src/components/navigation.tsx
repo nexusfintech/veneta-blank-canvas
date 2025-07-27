@@ -6,10 +6,10 @@ import {
   Users, 
   FileText, 
   Settings,
+  UserCog,
   Handshake,
   ChevronRight,
-  LogOut,
-  UserCog
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -137,7 +137,7 @@ export function SidebarNavigation() {
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             }`}
           >
-            <UserCog className={`h-4 w-4 ${isCollapsed ? "" : "mr-3"}`} />
+            <Users className={`h-4 w-4 ${isCollapsed ? "" : "mr-3"}`} />
             {!isCollapsed && (
               <>
                 <span className="flex-1">Gestione Utenti</span>
