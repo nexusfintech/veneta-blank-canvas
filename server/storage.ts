@@ -22,7 +22,9 @@ export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUser(id: string): Promise<boolean>;
   authenticateUser(credentials: LoginData): Promise<User | null>;
 }
 
@@ -124,6 +126,10 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
   async createUser(userData: InsertUser): Promise<User> {
     // Hash the password before storing
     const hashedPassword = await bcrypt.hash(userData.password, 10);
@@ -137,6 +143,11 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return user;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   async authenticateUser(credentials: LoginData): Promise<User | null> {

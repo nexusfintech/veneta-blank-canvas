@@ -8,7 +8,8 @@ import {
   Settings,
   Handshake,
   ChevronRight,
-  LogOut
+  LogOut,
+  UserCog
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -125,6 +126,26 @@ export function SidebarNavigation() {
             </Link>
           );
         })}
+        
+        {/* Admin-only navigation */}
+        {user?.role === "admin" && (
+          <Link
+            href="/users"
+            className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors group ${
+              location === "/users"
+                ? "bg-primary-100 text-primary-700"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+          >
+            <UserCog className={`h-4 w-4 ${isCollapsed ? "" : "mr-3"}`} />
+            {!isCollapsed && (
+              <>
+                <span className="flex-1">Gestione Utenti</span>
+                {location === "/users" && <ChevronRight className="h-4 w-4" />}
+              </>
+            )}
+          </Link>
+        )}
       </nav>
 
       <Separator />

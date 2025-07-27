@@ -23,11 +23,16 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 // Admin middleware
-function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.user || req.session.user.role !== "admin") {
-    return res.status(403).json({ message: "Admin access required" });
+async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await storage.getUser(req.session.userId!);
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: "Error checking admin status" });
   }
-  next();
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -273,6 +278,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Admin-only routes for user management
+  app.get("/api/admin/users", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Don't send passwords in response
+      const safeUsers = users.map(user => ({ ...user, password: undefined }));
+      res.json(safeUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/users", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const userData = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Un utente con questa email esiste già" });
+      }
+
+      const user = await storage.createUser(userData);
+      res.status(201).json({ ...user, password: undefined });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Prevent admin from deleting themselves
+      if (userId === req.session.userId) {
+        return res.status(400).json({ message: "Non puoi eliminare il tuo stesso account" });
+      }
+
+      const success = await storage.deleteUser(userId);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
     }
   });
 

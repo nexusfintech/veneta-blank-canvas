@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Home from "@/pages/home";
 import Contracts from "@/pages/contracts";
 import Settings from "@/pages/settings";
+import UserManagement from "@/pages/user-management";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/contracts" component={Contracts} />
       <Route path="/settings" component={Settings} />
+      <Route path="/users" component={UserManagement} />
       <Route component={NotFound} />
     </Switch>
   );
