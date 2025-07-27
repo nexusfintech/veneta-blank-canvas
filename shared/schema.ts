@@ -128,6 +128,7 @@ export const clients = pgTable("clients", {
 
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
+  createdBy: true, // This will be set by the server
 }).extend({
   legalRepresentative: legalRepresentativeSchema.optional(),
   beneficialOwners: z.array(beneficialOwnerSchema).optional(),
