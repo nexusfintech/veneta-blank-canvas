@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import multer from "multer";
-import pdfParse from "pdf-parse";
+// Dynamic import for pdf-parse to handle CommonJS module
 import { storage } from "./storage";
 import { insertClientSchema, loginSchema, type User } from "@shared/schema";
 import { extractCompanyDataFromText } from "./openai";
@@ -306,7 +306,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No PDF file provided" });
       }
 
-      // Extract text from PDF
+      // Extract text from PDF - dynamic import for CommonJS compatibility
+      const pdfParse = (await import("pdf-parse")).default;
       const pdfData = await pdfParse(req.file.buffer);
       const extractedText = pdfData.text;
 
