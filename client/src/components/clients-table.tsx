@@ -10,10 +10,11 @@ interface ClientsTableProps {
   clients: Client[];
   onEdit: (client: Client) => void;
   onDelete: (id: string) => void;
+  onView?: (client: Client) => void;
   isLoading?: boolean;
 }
 
-export function ClientsTable({ clients, onEdit, onDelete, isLoading }: ClientsTableProps) {
+export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: ClientsTableProps) {
   const { toast } = useToast();
 
   const handleContractGeneration = () => {
@@ -70,7 +71,11 @@ export function ClientsTable({ clients, onEdit, onDelete, isLoading }: ClientsTa
                 </TableRow>
               ) : (
                 clients.map((client) => (
-                  <TableRow key={client.id} className="hover:bg-slate-50">
+                  <TableRow 
+                    key={client.id} 
+                    className="hover:bg-slate-50 cursor-pointer transition-colors"
+                    onClick={() => onView ? onView(client) : onEdit(client)}
+                  >
                     <TableCell>
                       <div className="flex items-center">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -115,6 +120,10 @@ export function ClientsTable({ clients, onEdit, onDelete, isLoading }: ClientsTa
                           variant="ghost"
                           size="sm"
                           className="text-primary-600 hover:text-primary-900"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onView ? onView(client) : onEdit(client);
+                          }}
                           title="Visualizza"
                         >
                           <Eye className="h-4 w-4" />
@@ -123,7 +132,10 @@ export function ClientsTable({ clients, onEdit, onDelete, isLoading }: ClientsTa
                           variant="ghost"
                           size="sm"
                           className="text-slate-600 hover:text-slate-900"
-                          onClick={() => onEdit(client)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(client);
+                          }}
                           title="Modifica"
                         >
                           <Edit className="h-4 w-4" />
@@ -132,7 +144,10 @@ export function ClientsTable({ clients, onEdit, onDelete, isLoading }: ClientsTa
                           variant="ghost"
                           size="sm"
                           className="text-amber-600 hover:text-amber-900"
-                          onClick={handleContractGeneration}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleContractGeneration();
+                          }}
                           title="Genera Contratto (Coming Soon)"
                         >
                           <FileText className="h-4 w-4" />
@@ -141,7 +156,10 @@ export function ClientsTable({ clients, onEdit, onDelete, isLoading }: ClientsTa
                           variant="ghost"
                           size="sm"
                           className="text-red-600 hover:text-red-900"
-                          onClick={() => onDelete(client.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(client.id);
+                          }}
                           title="Elimina"
                         >
                           <Trash2 className="h-4 w-4" />

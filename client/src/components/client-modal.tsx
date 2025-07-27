@@ -1,14 +1,30 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X, FileText } from "lucide-react";
+import { 
+  X, 
+  FileText, 
+  ChevronDown, 
+  ChevronRight, 
+  Plus, 
+  Trash2,
+  User,
+  Building,
+  CreditCard,
+  MapPin,
+  Euro
+} from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { clientFormSchema, type ClientFormData } from "@/lib/validation";
 import { Client } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +40,14 @@ interface ClientModalProps {
 export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientModalProps) {
   const { toast } = useToast();
   const [clientType, setClientType] = useState<"persona_fisica" | "azienda">("persona_fisica");
+  const [sectionsOpen, setSectionsOpen] = useState({
+    basicData: true,
+    legalRep: false,
+    beneficialOwners: false,
+    geography: false,
+    product: false,
+    compensation: false
+  });
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
@@ -37,6 +61,48 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
       companyName: "",
       vatNumber: "",
       companyFiscalCode: "",
+      legalAddress: "",
+      legalZipCode: "",
+      legalCity: "",
+      legalProvince: "",
+      fax: "",
+      pec: "",
+      legalRepresentative: {
+        firstName: "",
+        lastName: "",
+        fiscalCode: "",
+        birthPlace: "",
+        birthDate: "",
+        residenceAddress: "",
+        residenceZipCode: "",
+        residenceCity: "",
+        residenceProvince: "",
+        documentType: "",
+        documentNumber: "",
+        documentAuthority: "",
+        documentIssuePlace: "",
+        documentIssueDate: "",
+        isPoliticallyExposed: false,
+        benefitsPublicFunds: false,
+        hasApicalRoles: false,
+        hasPublicCharges: false,
+        hasCriminalRecord: false,
+      },
+      beneficialOwners: [],
+      mainActivityProvince: "",
+      relationshipDestinationProvince: "",
+      counterpartyAreaProvince: "",
+      professionalActivity: "",
+      requestedProduct: "",
+      requestedCapital: "",
+      financingDuration: "",
+      interestRateType: "",
+      mediatorCompensation: "",
+      compensationType: "amount",
+      commission: "",
+      commissionType: "percentage",
+      instructionFees: "",
+      contractDate: "",
       email: "",
       phone: "",
       address: "",
@@ -45,6 +111,11 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
       province: "",
       notes: "",
     },
+  });
+
+  const { fields: beneficialOwnerFields, append: addBeneficialOwner, remove: removeBeneficialOwner } = useFieldArray({
+    control: form.control,
+    name: "beneficialOwners"
   });
 
   useEffect(() => {

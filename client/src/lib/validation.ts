@@ -14,15 +14,91 @@ export const validateVatNumber = (vat: string): boolean => {
   return vatNumberRegex.test(vat.toUpperCase());
 };
 
+// Legal representative validation schema
+const legalRepresentativeFormSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  fiscalCode: z.string().optional(),
+  birthPlace: z.string().optional(),
+  birthDate: z.string().optional(),
+  residenceAddress: z.string().optional(),
+  residenceZipCode: z.string().optional(),
+  residenceCity: z.string().optional(),
+  residenceProvince: z.string().optional(),
+  documentType: z.string().optional(),
+  documentNumber: z.string().optional(),
+  documentAuthority: z.string().optional(),
+  documentIssuePlace: z.string().optional(),
+  documentIssueDate: z.string().optional(),
+  isPoliticallyExposed: z.boolean().default(false),
+  benefitsPublicFunds: z.boolean().default(false),
+  hasApicalRoles: z.boolean().default(false),
+  hasPublicCharges: z.boolean().default(false),
+  hasCriminalRecord: z.boolean().default(false),
+});
+
+// Beneficial owner validation schema
+const beneficialOwnerFormSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  birthPlace: z.string().optional(),
+  birthDate: z.string().optional(),
+  residenceAddress: z.string().optional(),
+  residenceZipCode: z.string().optional(),
+  residenceCity: z.string().optional(),
+  residenceProvince: z.string().optional(),
+  documentType: z.string().optional(),
+  documentNumber: z.string().optional(),
+  documentAuthority: z.string().optional(),
+  documentIssuePlace: z.string().optional(),
+  documentIssueDate: z.string().optional(),
+  isPoliticallyExposed: z.boolean().default(false),
+  hasPublicCharges: z.boolean().default(false),
+  hasOtherRoles: z.boolean().default(false),
+  benefitsPublicFunds: z.boolean().default(false),
+  ownershipReason: z.string().optional(),
+});
+
 export const clientFormSchema = z.object({
   type: z.enum(["persona_fisica", "azienda"]),
+  // Individual fields
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   fiscalCode: z.string().optional(),
   birthDate: z.string().optional(),
+  // Company basic fields
   companyName: z.string().optional(),
   vatNumber: z.string().optional(),
   companyFiscalCode: z.string().optional(),
+  // Company extended fields
+  legalAddress: z.string().optional(),
+  legalZipCode: z.string().optional(),
+  legalCity: z.string().optional(),
+  legalProvince: z.string().optional(),
+  fax: z.string().optional(),
+  pec: z.string().optional(),
+  // Legal representative
+  legalRepresentative: legalRepresentativeFormSchema.optional(),
+  // Beneficial owners
+  beneficialOwners: z.array(beneficialOwnerFormSchema).optional(),
+  // Geographic area and activity
+  mainActivityProvince: z.string().optional(),
+  relationshipDestinationProvince: z.string().optional(),
+  counterpartyAreaProvince: z.string().optional(),
+  professionalActivity: z.string().optional(),
+  // Requested product
+  requestedProduct: z.string().optional(),
+  requestedCapital: z.string().optional(),
+  financingDuration: z.string().optional(),
+  interestRateType: z.string().optional(),
+  // Compensation and fees
+  mediatorCompensation: z.string().optional(),
+  compensationType: z.enum(["amount", "percentage"]).optional(),
+  commission: z.string().optional(),
+  commissionType: z.enum(["amount", "percentage"]).optional(),
+  instructionFees: z.string().optional(),
+  contractDate: z.string().optional(),
+  // Common fields
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   address: z.string().optional(),

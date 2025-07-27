@@ -111,7 +111,12 @@ export const clients = pgTable("clients", {
 
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
+}).extend({
+  legalRepresentative: legalRepresentativeSchema.optional(),
+  beneficialOwners: z.array(beneficialOwnerSchema).optional(),
 });
 
 export type InsertClient = z.infer<typeof insertClientSchema>;
 export type Client = typeof clients.$inferSelect;
+export type LegalRepresentative = z.infer<typeof legalRepresentativeSchema>;
+export type BeneficialOwner = z.infer<typeof beneficialOwnerSchema>;

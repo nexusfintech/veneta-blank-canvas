@@ -1,5 +1,6 @@
-import { type Client, type InsertClient } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { type Client, type InsertClient, clients } from "@shared/schema";
+import { db } from "./db";
+import { eq, or, ilike } from "drizzle-orm";
 
 export interface IStorage {
   getClient(id: string): Promise<Client | undefined>;
@@ -17,86 +18,14 @@ export interface IStorage {
   }>;
 }
 
-export class MemStorage implements IStorage {
-  private clients: Map<string, Client>;
-
-  constructor() {
-    this.clients = new Map();
-    this.seedData();
-  }
-
-  private seedData() {
-    const sampleClients: Client[] = [
-      {
-        id: "1",
-        type: "persona_fisica",
-        firstName: "Mario",
-        lastName: "Bianchi",
-        fiscalCode: "BNCMRA85M01H501Z",
-        birthDate: "1985-08-01",
-        email: "mario.bianchi@email.com",
-        phone: "+39 335 123 4567",
-        address: "Via Roma 123",
-        zipCode: "20100",
-        city: "Milano",
-        province: "MI",
-        status: "attivo",
-        companyName: null,
-        vatNumber: null,
-        companyFiscalCode: null,
-        notes: null,
-      },
-      {
-        id: "2",
-        type: "azienda",
-        companyName: "Rossi Construction SRL",
-        vatNumber: "IT12345678901",
-        companyFiscalCode: "12345678901",
-        email: "info@rossiconstruction.it",
-        phone: "+39 02 123 4567",
-        address: "Via Nazionale 456",
-        zipCode: "00100",
-        city: "Roma",
-        province: "RM",
-        status: "attivo",
-        firstName: null,
-        lastName: null,
-        fiscalCode: null,
-        birthDate: null,
-        notes: null,
-      },
-      {
-        id: "3",
-        type: "persona_fisica",
-        firstName: "Laura",
-        lastName: "Verdi",
-        fiscalCode: "VRDLRA90A41F205X",
-        birthDate: "1990-01-01",
-        email: "laura.verdi@email.com",
-        phone: "+39 347 987 6543",
-        address: "Corso Umberto 789",
-        zipCode: "80100",
-        city: "Napoli",
-        province: "NA",
-        status: "inattivo",
-        companyName: null,
-        vatNumber: null,
-        companyFiscalCode: null,
-        notes: null,
-      },
-    ];
-
-    sampleClients.forEach(client => {
-      this.clients.set(client.id, client);
-    });
-  }
-
+export class DatabaseStorage implements IStorage {
   async getClient(id: string): Promise<Client | undefined> {
-    return this.clients.get(id);
+    const [client] = await db.select().from(clients).where(eq(clients.id, id));
+    return client || undefined;
   }
 
   async getAllClients(): Promise<Client[]> {
-    return Array.from(this.clients.values());
+    return await db.select().from(clients);
   }
 
   async searchClients(query: string): Promise<Client[]> {
@@ -104,79 +33,57 @@ export class MemStorage implements IStorage {
       return this.getAllClients();
     }
 
-    const searchTerm = query.toLowerCase();
-    return Array.from(this.clients.values()).filter(client => {
-      const searchableFields = [
-        client.firstName,
-        client.lastName,
-        client.companyName,
-        client.fiscalCode,
-        client.vatNumber,
-        client.email,
-        client.phone,
-        client.city,
-      ].filter(Boolean);
-
-      return searchableFields.some(field => 
-        field?.toLowerCase().includes(searchTerm)
-      );
-    });
+    const searchTerm = `%${query}%`;
+    return await db.select().from(clients).where(
+      or(
+        ilike(clients.firstName, searchTerm),
+        ilike(clients.lastName, searchTerm),
+        ilike(clients.companyName, searchTerm),
+        ilike(clients.fiscalCode, searchTerm),
+        ilike(clients.vatNumber, searchTerm),
+        ilike(clients.email, searchTerm),
+        ilike(clients.phone, searchTerm),
+        ilike(clients.city, searchTerm)
+      )
+    );
   }
 
   async filterClients(filters: { type?: string; status?: string }): Promise<Client[]> {
-    let results = Array.from(this.clients.values());
-
+    const conditions = [];
     if (filters.type) {
-      results = results.filter(client => client.type === filters.type);
+      conditions.push(eq(clients.type, filters.type));
     }
-
     if (filters.status) {
-      results = results.filter(client => client.status === filters.status);
+      conditions.push(eq(clients.status, filters.status));
     }
 
-    return results;
+    if (conditions.length > 0) {
+      return await db.select().from(clients).where(conditions.length === 1 ? conditions[0] : or(...conditions));
+    }
+
+    return await db.select().from(clients);
   }
 
   async createClient(insertClient: InsertClient): Promise<Client> {
-    const id = randomUUID();
-    const client: Client = { 
-      ...insertClient, 
-      id,
-      type: insertClient.type,
-      status: insertClient.status || "attivo",
-      // Ensure all nullable fields are properly typed
-      address: insertClient.address ?? null,
-      email: insertClient.email ?? null,
-      phone: insertClient.phone ?? null,
-      firstName: insertClient.firstName ?? null,
-      lastName: insertClient.lastName ?? null,
-      fiscalCode: insertClient.fiscalCode ?? null,
-      birthDate: insertClient.birthDate ?? null,
-      companyName: insertClient.companyName ?? null,
-      vatNumber: insertClient.vatNumber ?? null,
-      companyFiscalCode: insertClient.companyFiscalCode ?? null,
-      zipCode: insertClient.zipCode ?? null,
-      city: insertClient.city ?? null,
-      province: insertClient.province ?? null,
-      notes: insertClient.notes ?? null
-    };
-    this.clients.set(id, client);
+    const [client] = await db
+      .insert(clients)
+      .values(insertClient)
+      .returning();
     return client;
   }
 
   async updateClient(id: string, updateData: Partial<InsertClient>): Promise<Client | undefined> {
-    const existingClient = this.clients.get(id);
-    if (!existingClient) {
-      return undefined;
-    }
-
-    const updatedClient: Client = { ...existingClient, ...updateData };
-    this.clients.set(id, updatedClient);
-    return updatedClient;
+    const [client] = await db
+      .update(clients)
+      .set(updateData)
+      .where(eq(clients.id, id))
+      .returning();
+    return client || undefined;
   }
 
   async deleteClient(id: string): Promise<boolean> {
-    return this.clients.delete(id);
+    const result = await db.delete(clients).where(eq(clients.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getStats(): Promise<{
@@ -185,7 +92,7 @@ export class MemStorage implements IStorage {
     companies: number;
     activeContracts: number;
   }> {
-    const allClients = Array.from(this.clients.values());
+    const allClients = await db.select().from(clients);
     const individuals = allClients.filter(c => c.type === "persona_fisica").length;
     const companies = allClients.filter(c => c.type === "azienda").length;
     const activeClients = allClients.filter(c => c.status === "attivo").length;
@@ -199,4 +106,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
