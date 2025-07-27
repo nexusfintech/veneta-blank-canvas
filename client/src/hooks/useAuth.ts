@@ -6,6 +6,21 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: async () => {
+      const response = await fetch("/api/auth/user", {
+        credentials: "include",
+      });
+      
+      if (response.status === 401) {
+        return null;
+      }
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch user");
+      }
+      
+      return response.json();
+    },
   });
 
   return {
