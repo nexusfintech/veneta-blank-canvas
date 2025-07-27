@@ -293,29 +293,7 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
   };
 
   const generateZohoSignUrl = (clientData: ClientFormData) => {
-    const baseUrl = "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm";
-    const params = new URLSearchParams({
-      'i': '7857',
-      'recipient_name': clientData.companyName || ' ',
-      'recipient_email': clientData.email || ' ',
-      'e contrattuali del contratto di mediazione sottoscritto in data': clientData.contractDate || ' ',
-      'Compenso mediatore': clientData.mediatorCompensation || ' ',
-      'Euro': clientData.requestedCapital || ' ',
-      'Ragione sociale': clientData.companyName || ' ',
-      'Sede legale': `${clientData.legalAddress || ' '}, ${clientData.legalZipCode || ' '} ${clientData.legalCity || ' '} (${clientData.legalProvince || ' '})`,
-      'Telefono': clientData.phone || ' ',
-      'Fax': clientData.fax || ' ',
-      'Indirizzo email': clientData.email || ' ',
-      'PEC': clientData.pec || ' ',
-      'Partita IVA': clientData.vatNumber || ' ',
-      'Codice Fiscale': clientData.companyFiscalCode || ' ',
-      'Nome cognome': `${clientData.legalRepresentative?.firstName || ' '} ${clientData.legalRepresentative?.lastName || ' '}`,
-      'nome mediatore': 'Venetagroup S.r.l.',
-      'PRODOTTO FINANZIARIO RICHIESTO:': clientData.requestedProduct || ' ',
-      'CAPITALE RICHIESTO': clientData.requestedCapital || ' ',
-      'TIPOLOGIA TASSO': clientData.interestRateType || ' ',
-      'DURATA DEL FINANZIAMENTO': clientData.financingDuration || ' ',
-      '% mediatore': clientData.commission || ' ',
+    return "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm?i=7857";,
       'Luogo e data': `${clientData.legalCity || ' '}, ${clientData.contractDate || ' '}`,
       'Nome Cognome': `${clientData.legalRepresentative?.firstName || ' '} ${clientData.legalRepresentative?.lastName || ' '}`,
       'Codice fiscale': clientData.legalRepresentative?.fiscalCode || ' ',
@@ -349,11 +327,7 @@ export function ClientModal({ open, onClose, onSave, client, isSaving }: ClientM
       'provincia/stato estero di destinazione del rapporto': clientData.relationshipDestinationProvince || ' ',
       'provincia/stato area controparte': clientData.counterpartyAreaProvince || ' ',
       'attività professionale svolta dal cliente': clientData.professionalActivity || ' ',
-      'oneri di istruttoria': clientData.instructionFees || ' ',
-      'data di sottoscrizione del contratto': clientData.contractDate || ' '
-    });
-    
-    return `${baseUrl}?${params.toString()}`;
+      };
   };
 
   const handleContractGeneration = () => {

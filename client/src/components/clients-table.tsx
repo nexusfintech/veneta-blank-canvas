@@ -22,67 +22,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
   const [generatedUrls, setGeneratedUrls] = useState<Record<string, string>>({});
 
   const generateZohoSignUrl = (client: Client) => {
-    const baseUrl = "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm";
-    const params = new URLSearchParams({
-      'i': '7857',
-      'recipient_name': client.companyName || `${client.firstName || ' '} ${client.lastName || ' '}`,
-      'recipient_email': client.email || ' ',
-      'e contrattuali del contratto di mediazione sottoscritto in data': client.contractDate || ' ',
-      'Compenso mediatore': client.mediatorCompensation || ' ',
-      'Euro': client.requestedCapital || ' ',
-      'Ragione sociale': client.companyName || ' ',
-      'Sede legale': `${client.legalAddress || ' '}, ${client.legalZipCode || ' '} ${client.legalCity || ' '} (${client.legalProvince || ' '})`,
-      'Telefono': client.phone || ' ',
-      'Fax': client.fax || ' ',
-      'Indirizzo email': client.email || ' ',
-      'PEC': client.pec || ' ',
-      'Partita IVA': client.vatNumber || ' ',
-      'Codice Fiscale': client.companyFiscalCode || client.fiscalCode || ' ',
-      'Nome cognome': client.legalRepresentative ? `${client.legalRepresentative.firstName || ' '} ${client.legalRepresentative.lastName || ' '}` : ' ',
-      'nome mediatore': 'Venetagroup S.r.l.',
-      'PRODOTTO FINANZIARIO RICHIESTO:': client.requestedProduct || ' ',
-      'CAPITALE RICHIESTO': client.requestedCapital || ' ',
-      'TIPOLOGIA TASSO': client.interestRateType || ' ',
-      'DURATA DEL FINANZIAMENTO': client.financingDuration || ' ',
-      '% mediatore': client.commission || ' ',
-      'Luogo e data': `${client.legalCity || client.city || ' '}, ${client.contractDate || ' '}`,
-      'Nome Cognome': client.legalRepresentative ? `${client.legalRepresentative.firstName || ' '} ${client.legalRepresentative.lastName || ' '}` : `${client.firstName || ' '} ${client.lastName || ' '}`,
-      'Codice fiscale': client.legalRepresentative?.fiscalCode || client.fiscalCode || ' ',
-      'Luogo e data di nascita': client.legalRepresentative ? `${client.legalRepresentative.birthPlace || ' '}, ${client.legalRepresentative.birthDate || ' '}` : `${client.birthPlace || ' '}, ${client.birthDate || ' '}`,
-      'Indirizzo di residenza': client.legalRepresentative?.residenceAddress || client.address || ' ',
-      'CAP': client.legalRepresentative?.residenceZipCode || client.zipCode || ' ',
-      'Comune': client.legalRepresentative?.residenceCity || client.city || ' ',
-      'Prov': client.legalRepresentative?.residenceProvince || client.province || ' ',
-      'Tipo documento identifi': client.legalRepresentative?.documentType || client.documentType || ' ',
-      'Numero documento': client.legalRepresentative?.documentNumber || client.documentNumber || ' ',
-      'Luogo e data rilascio': client.legalRepresentative ? `${client.legalRepresentative.documentIssuePlace || ' '}, ${client.legalRepresentative.documentIssueDate || ' '}` : `${client.documentIssuePlace || ' '}, ${client.documentIssueDate || ' '}`,
-      'Autorit rilascio': client.legalRepresentative?.documentAuthority || client.documentIssuedBy || ' ',
-      'Tipo documento identific.': client.legalRepresentative?.documentType || client.documentType || ' ',
-      'Autorita rilascio': client.legalRepresentative?.documentAuthority || client.documentIssuedBy || ' ',
-      'Addetto di Venetagroup S.r.I. che ha raccolto le informazioni e innanzi al quale il/i dichiarante/': 'Venetagroup S.r.l.',
-      'cod. Fisc': client.companyFiscalCode || client.fiscalCode || ' ',
-      'e': client.vatNumber || ' ',
-      'Cod. Fisc. e Part. IVA': `${client.companyFiscalCode || client.fiscalCode || ' '} - ${client.vatNumber || ' '}`,
-      'con sede legale in': `${client.legalAddress || client.address || ' '}, ${client.legalZipCode || client.zipCode || ' '} ${client.legalCity || client.city || ' '} (${client.legalProvince || client.province || ' '})`,
-      'in persona di': client.legalRepresentative ? `${client.legalRepresentative.firstName || ' '} ${client.legalRepresentative.lastName || ' '}` : `${client.firstName || ' '} ${client.lastName || ' '}`,
-      'Per Venetagroup S.r.I. (Sig.': 'Venetagroup S.r.l.',
-      'Luogo e Data': `${client.legalCity || client.city || ' '}, ${new Date().toLocaleDateString('it-IT')}`,
-      'Sig ../ra': client.legalRepresentative ? `${client.legalRepresentative.firstName || ' '} ${client.legalRepresentative.lastName || ' '}` : `${client.firstName || ' '} ${client.lastName || ' '}`,
-      'Sig./ra': client.legalRepresentative ? `${client.legalRepresentative.firstName || ' '} ${client.legalRepresentative.lastName || ' '}` : `${client.firstName || ' '} ${client.lastName || ' '}`,
-      'INDIRIZZO:': client.legalAddress || client.address || ' ',
-      'CODICE FISCALE,': client.companyFiscalCode || client.fiscalCode || ' ',
-      'PRODOTTO': client.requestedProduct || ' ',
-      'RICHIEDENTE/I': client.companyName || `${client.firstName || ' '} ${client.lastName || ' '}`,
-      // Campi aggiuntivi per completezza del contratto
-      'provincia o Stato estero di svolgimento principale attività': client.mainActivityProvince || ' ',
-      'provincia/stato estero di destinazione del rapporto': client.relationshipDestinationProvince || ' ',
-      'provincia/stato area controparte': client.counterpartyAreaProvince || ' ',
-      'attività professionale svolta dal cliente': client.professionalActivity || ' ',
-      'oneri di istruttoria': client.instructionFees || ' ',
-      'data di sottoscrizione del contratto': client.contractDate || ' '
-    });
-
-    return `${baseUrl}?${params.toString()}`;
+    return "https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm?i=7857";
   };
 
   const handleContractGeneration = (client: Client) => {
