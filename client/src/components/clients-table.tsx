@@ -81,18 +81,18 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
       'oneri di istruttoria': client.instructionFees || ' ',
       'data di sottoscrizione del contratto': client.contractDate || ' '
     });
-    
+
     return `${baseUrl}?${params.toString()}`;
   };
 
   const handleContractGeneration = (client: Client) => {
     const contractUrl = generateZohoSignUrl(client);
-    
+
     setGeneratedUrls(prev => ({
       ...prev,
       [client.id]: contractUrl
     }));
-    
+
     toast({
       title: "URL Contratto Generato",
       description: `L'URL del contratto per ${client.type === 'azienda' ? client.companyName : `${client.firstName} ${client.lastName}`} è stato generato.`,
@@ -250,6 +250,19 @@ export function ClientsTable({ clients, onEdit, onDelete, onView, isLoading }: C
                           disabled={false} // We don't have access to loading state here, but we can add it later
                         >
                           <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-900"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open("https://sign.zoho.eu/zsfl/eQ5Xh9cwtQ7SL4tbPSlm?i=7857", "_blank");
+                          }}
+                          title="Genera contratto"
+                        >
+                          <FileText className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, UserPlus, Shield, User as UserIcon } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, UserPlus, Shield, User as UserIcon, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -162,9 +163,17 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestione Utenti</h1>
-          <p className="text-gray-600">Gestisci gli utenti del sistema</p>
+        <div className="flex items-center space-x-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+              <ArrowLeft className="h-4 w-4" />
+              <span>Indietro</span>
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Gestione Utenti</h1>
+            <p className="text-gray-600">Gestisci gli utenti del sistema</p>
+          </div>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
