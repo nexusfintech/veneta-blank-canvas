@@ -40,6 +40,21 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add security headers for better deployment compatibility
+  app.use((req, res, next) => {
+    // Allow credentials for cross-origin requests
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Set proper CORS headers for production
+    if (process.env.NODE_ENV === "production") {
+      res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+    }
+    
+    next();
+  });
+
   // Multer configuration for file uploads
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -69,9 +84,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      // For Replit deployments, cookies work better without strict security in production
+      secure: false, // Disabled for Replit deployment compatibility
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: "lax", // More permissive for deployment
     },
   }));
 

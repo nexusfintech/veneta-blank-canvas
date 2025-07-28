@@ -25,21 +25,29 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Important: include credentials for session cookies
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Login failed");
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // Important: include credentials for session cookies
+          body: JSON.stringify(data),
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Login failed");
+        }
+        
+        return response.json();
+      } catch (error) {
+        // Handle network errors
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          throw new Error("Errore di connessione. Controlla la tua connessione internet.");
+        }
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: () => {
       toast({

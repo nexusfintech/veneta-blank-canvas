@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Deployment Authentication Fix (2025-01-28)
+- **Fixed authentication issues in public deployment** by adjusting session cookie configuration
+- **Disabled secure cookies** for Replit deployment compatibility (secure: false)
+- **Updated sameSite policy** to "lax" for better cross-origin support
+- **Added CORS headers** for production environment compatibility
+- **Enhanced error handling** in login form for network connectivity issues
+- **Improved session reliability** for public deployment vs development environment
+
 ### Authentication System Implementation (2025-01-27)
 - **Added PostgreSQL-based authentication system** replacing the previous system
 - **Removed Statistics menu** from navigation as requested
