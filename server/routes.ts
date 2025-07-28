@@ -40,6 +40,25 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for deployment
+  app.get("/", (req, res) => {
+    res.json({ 
+      status: "healthy", 
+      message: "Client Management System is running",
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Alternative health check endpoint that works in all environments
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "healthy", 
+      message: "Client Management System is running",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "development"
+    });
+  });
+
   // Multer configuration for file uploads
   const upload = multer({
     storage: multer.memoryStorage(),

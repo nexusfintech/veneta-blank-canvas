@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Deployment Fixes (2025-01-28)
+- **Fixed deployment issues** that caused the application to exit after initialization
+- **Added health check endpoints** at `/` and `/api/health` to respond to deployment health checks
+- **Improved error handling** in server initialization to prevent unexpected exits
+- **Enhanced server logging** with graceful shutdown handlers for SIGTERM and SIGINT
+- **Removed error throwing** in error handler middleware to prevent server crashes
+- **Added production-specific logging** for database initialization completion
+
 ### Login Fix for Production Deployment (2025-01-28)
 - **Fixed login issue in public deployment** by correcting session configuration
 - **Updated session cookies** to work with HTTP (secure: false) for Replit deployment compatibility
