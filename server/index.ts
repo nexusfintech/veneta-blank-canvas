@@ -73,7 +73,7 @@ app.use((req, res, next) => {
     const port = parseInt(process.env.PORT || '5000', 10);
     
     // Start the server and keep the process alive
-    await new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       server.listen({
         port,
         host: "0.0.0.0",
@@ -106,6 +106,11 @@ app.use((req, res, next) => {
           resolve(); // Now resolve to allow the process to exit
         });
       });
+    });
+
+    // Keep the process alive with an infinite promise
+    await new Promise(() => {
+      // This promise never resolves, keeping the process alive
     });
 
   } catch (error) {
