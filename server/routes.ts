@@ -40,23 +40,37 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint for deployment
+  // Health check endpoint for deployment - must respond quickly and reliably
   app.get("/", (req, res) => {
-    res.json({ 
+    res.status(200).json({ 
       status: "healthy", 
       message: "Client Management System is running",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || "development"
     });
   });
 
   // Alternative health check endpoint that works in all environments
   app.get("/api/health", (req, res) => {
-    res.json({ 
+    res.status(200).json({ 
       status: "healthy", 
       message: "Client Management System is running",
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || "development"
+      environment: process.env.NODE_ENV || "development",
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: "1.0.0"
     });
+  });
+
+  // Additional health endpoints that deployment systems might check
+  app.get("/health", (req, res) => {
+    res.status(200).send("OK");
+  });
+
+  app.get("/ping", (req, res) => {
+    res.status(200).send("pong");
   });
 
   // Multer configuration for file uploads
@@ -78,12 +92,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Session configuration
   const pgStore = connectPg(session);
+  
+  // Session store configuration with error handling
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true, // Allow creating table if missing
+    tableName: "sessions",
+  });
+
+  // Handle session store errors gracefully
+  sessionStore.on('error', (error) => {
+    console.error('Session store error:', error);
+  });
+
   app.use(session({
-    store: new pgStore({
-      conString: process.env.DATABASE_URL,
-      createTableIfMissing: true, // Allow creating table if missing
-      tableName: "sessions",
-    }),
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,

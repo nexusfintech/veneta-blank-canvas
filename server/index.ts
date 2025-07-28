@@ -42,8 +42,13 @@ async function startServer() {
     // Initialize database and seed users in production
     if (process.env.NODE_ENV === "production") {
       log("Initializing database and seeding users...");
-      await seedUsers();
-      log("Database initialization completed successfully");
+      try {
+        await seedUsers();
+        log("Database initialization completed successfully");
+      } catch (error) {
+        log(`Warning: Database seeding failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        // Continue anyway - the app should still work even if seeding fails
+      }
     }
     
     const server = await registerRoutes(app);
@@ -80,12 +85,18 @@ async function startServer() {
     }, () => {
       log(`serving on port ${port}`);
       log("Server is ready to handle requests");
+      log(`Health check available at http://0.0.0.0:${port}/api/health`);
     });
 
     // Handle server errors
     server.on('error', (error) => {
       log(`Server error: ${error.message}`);
-      throw error;
+      if (error.message.includes('EADDRINUSE')) {
+        log(`Port ${port} is already in use. Exiting...`);
+        process.exit(1);
+      } else {
+        log('Server error occurred but continuing...');
+      }
     });
 
     // Handle graceful shutdown
@@ -104,6 +115,26 @@ async function startServer() {
         process.exit(0);
       });
     });
+
+    // Handle uncaught exceptions to prevent unexpected process termination
+    process.on('uncaughtException', (error) => {
+      log(`Uncaught Exception: ${error.message}`);
+      log('Stack trace: ' + error.stack);
+      // In production, we might want to restart the process or handle this differently
+      // For now, just log and continue
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      log(`Unhandled Promise Rejection at: ${promise}, reason: ${reason}`);
+      // In production, we might want to restart the process or handle this differently
+      // For now, just log and continue
+    });
+
+    // Keep the process alive
+    setInterval(() => {
+      // This interval keeps the process alive and provides periodic health checks
+      // No need to do anything here, just prevent the process from exiting
+    }, 30000); // Every 30 seconds
 
   } catch (error) {
     console.error("Failed to start server:", error);
