@@ -30,6 +30,7 @@ export default function Login() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Important: include credentials for session cookies
         body: JSON.stringify(data),
       });
       
@@ -45,7 +46,9 @@ export default function Login() {
         title: "Accesso effettuato",
         description: "Benvenuto nel sistema gestionale",
       });
+      // Invalidate and refetch user data to trigger redirect
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: (error: Error) => {
       toast({
