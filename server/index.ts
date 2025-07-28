@@ -72,27 +72,39 @@ app.use((req, res, next) => {
     // It is the only port that is not firewalled.
     const port = parseInt(process.env.PORT || '5000', 10);
     
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
-      log("Server is ready to handle requests");
-    });
-
-    // Handle graceful shutdown
-    process.on('SIGTERM', () => {
-      log('SIGTERM received, shutting down gracefully');
-      server.close(() => {
-        log('Process terminated');
+    // Start the server and keep the process alive
+    await new Promise<void>((resolve, reject) => {
+      server.listen({
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      }, () => {
+        log(`serving on port ${port}`);
+        log("Server is ready to handle requests");
+        // Server is now listening, but don't resolve the promise to keep the process alive
       });
-    });
 
-    process.on('SIGINT', () => {
-      log('SIGINT received, shutting down gracefully');
-      server.close(() => {
-        log('Process terminated');
+      // Handle server errors
+      server.on('error', (error) => {
+        log(`Server error: ${error.message}`);
+        reject(error);
+      });
+
+      // Handle graceful shutdown
+      process.on('SIGTERM', () => {
+        log('SIGTERM received, shutting down gracefully');
+        server.close(() => {
+          log('Process terminated');
+          resolve(); // Now resolve to allow the process to exit
+        });
+      });
+
+      process.on('SIGINT', () => {
+        log('SIGINT received, shutting down gracefully');
+        server.close(() => {
+          log('Process terminated');
+          resolve(); // Now resolve to allow the process to exit
+        });
       });
     });
 
