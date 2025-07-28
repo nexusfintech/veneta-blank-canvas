@@ -37,7 +37,7 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+async function startServer() {
   try {
     // Initialize database and seed users in production
     if (process.env.NODE_ENV === "production") {
@@ -72,49 +72,44 @@ app.use((req, res, next) => {
     // It is the only port that is not firewalled.
     const port = parseInt(process.env.PORT || '5000', 10);
     
-    // Start the server and keep the process alive
-    new Promise<void>((resolve, reject) => {
-      server.listen({
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`serving on port ${port}`);
-        log("Server is ready to handle requests");
-        // Server is now listening, but don't resolve the promise to keep the process alive
-      });
+    // Start the server
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+      log("Server is ready to handle requests");
+    });
 
-      // Handle server errors
-      server.on('error', (error) => {
-        log(`Server error: ${error.message}`);
-        reject(error);
-      });
+    // Handle server errors
+    server.on('error', (error) => {
+      log(`Server error: ${error.message}`);
+      throw error;
+    });
 
-      // Handle graceful shutdown
-      process.on('SIGTERM', () => {
-        log('SIGTERM received, shutting down gracefully');
-        server.close(() => {
-          log('Process terminated');
-          resolve(); // Now resolve to allow the process to exit
-        });
-      });
-
-      process.on('SIGINT', () => {
-        log('SIGINT received, shutting down gracefully');
-        server.close(() => {
-          log('Process terminated');
-          resolve(); // Now resolve to allow the process to exit
-        });
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => {
+      log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        log('Process terminated');
+        process.exit(0);
       });
     });
 
-    // Keep the process alive with an infinite promise
-    await new Promise(() => {
-      // This promise never resolves, keeping the process alive
+    process.on('SIGINT', () => {
+      log('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        log('Process terminated');
+        process.exit(0);
+      });
     });
 
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
   }
-})();
+}
+
+// Start the server
+startServer();
