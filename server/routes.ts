@@ -62,16 +62,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(session({
     store: new pgStore({
       conString: process.env.DATABASE_URL,
-      createTableIfMissing: false,
+      createTableIfMissing: true, // Allow creating table if missing
       tableName: "sessions",
     }),
     secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Set to false for Replit deployment to work with HTTP
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax', // Add sameSite for better compatibility
     },
   }));
 

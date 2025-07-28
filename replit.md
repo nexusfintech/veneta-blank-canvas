@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Login Fix for Production Deployment (2025-01-28)
+- **Fixed login issue in public deployment** by correcting session configuration
+- **Updated session cookies** to work with HTTP (secure: false) for Replit deployment compatibility
+- **Added sameSite: 'lax'** policy for better cookie compatibility across browsers
+- **Fixed credentials handling** in frontend login requests with 'credentials: include'
+- **Enabled automatic session table creation** with createTableIfMissing: true
+- **Added database initialization** for production environment with automatic user seeding
+- **Created database index** on sessions table for better performance
+
 ### Authentication System Implementation (2025-01-27)
 - **Added PostgreSQL-based authentication system** replacing the previous system
 - **Removed Statistics menu** from navigation as requested
