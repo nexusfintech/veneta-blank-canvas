@@ -14,7 +14,7 @@ import { z } from "zod";
 declare module "express-session" {
   interface SessionData {
     userId?: string;
-    user?: User;
+    user?: User & { role?: string };
   }
 }
 
@@ -95,18 +95,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
+      console.log("Login attempt:", req.body.email);
       const credentials = loginSchema.parse(req.body);
       const user = await storage.authenticateUser(credentials);
       
       if (!user) {
+        console.log("Authentication failed for:", req.body.email);
         return res.status(401).json({ message: "Email o password non corretti" });
       }
 
-      req.session.userId = user.id;
-      req.session.user = user;
+      console.log("User authenticated:", user.id);
       
-      res.json({ message: "Login successful", user: { ...user, password: undefined } });
+      // Get user role
+      const role = await storage.getUserRole(user.id);
+      console.log("User role:", role);
+      
+      req.session.userId = user.id;
+      req.session.user = { ...user, role };
+      
+      res.json({ 
+        message: "Login successful", 
+        user: { ...user, password: undefined, role } 
+      });
     } catch (error) {
+      console.error("Login error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
           message: "Dati non validi", 

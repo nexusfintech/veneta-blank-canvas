@@ -173,31 +173,46 @@ export class DatabaseStorage implements IStorage {
 
   // Role operations
   async getUserRole(userId: string): Promise<string | undefined> {
-    const [role] = await db.select().from(userRoles).where(eq(userRoles.userId, userId));
-    return role?.role;
+    try {
+      const [role] = await db.select().from(userRoles).where(eq(userRoles.userId, userId));
+      return role?.role;
+    } catch (error) {
+      console.error("Error getting user role:", error);
+      return undefined;
+    }
   }
 
   async hasRole(userId: string, role: string): Promise<boolean> {
-    const [userRole] = await db
-      .select()
-      .from(userRoles)
-      .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role)));
-    return !!userRole;
+    try {
+      const [userRole] = await db
+        .select()
+        .from(userRoles)
+        .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role)));
+      return !!userRole;
+    } catch (error) {
+      console.error("Error checking user role:", error);
+      return false;
+    }
   }
 
   async setUserRole(userId: string, role: string): Promise<void> {
-    // Check if user already has a role
-    const existingRole = await this.getUserRole(userId);
-    
-    if (existingRole) {
-      // Update existing role
-      await db
-        .update(userRoles)
-        .set({ role })
-        .where(eq(userRoles.userId, userId));
-    } else {
-      // Insert new role
-      await db.insert(userRoles).values({ userId, role });
+    try {
+      // Check if user already has a role
+      const existingRole = await this.getUserRole(userId);
+      
+      if (existingRole) {
+        // Update existing role
+        await db
+          .update(userRoles)
+          .set({ role })
+          .where(eq(userRoles.userId, userId));
+      } else {
+        // Insert new role
+        await db.insert(userRoles).values({ userId, role });
+      }
+    } catch (error) {
+      console.error("Error setting user role:", error);
+      throw error;
     }
   }
 }
