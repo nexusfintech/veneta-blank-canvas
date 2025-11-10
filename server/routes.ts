@@ -76,11 +76,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const pgStore = connectPg(session);
   app.use(session({
     store: new pgStore({
-      conString: process.env.DATABASE_URL,
-      createTableIfMissing: true,
+      conString: process.env.SUPABASE_DB_URL,
+      createTableIfMissing: false,
       tableName: "sessions",
     }),
-    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+    secret: process.env.SESSION_SECRET || "lovable-cloud-session-secret-" + Math.random().toString(36),
     resave: false,
     saveUninitialized: false,
     cookie: {
