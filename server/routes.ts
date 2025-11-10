@@ -92,6 +92,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   }));
 
+  // Healthcheck route to verify API is mounted
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", time: new Date().toISOString() });
+  });
+
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -512,6 +517,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user" });
     }
+  });
+
+  // Fallback 404 for API routes (avoid HTML fallthrough)
+  app.use("/api", (req, res) => {
+    res.status(404).json({ message: "Not Found", path: req.path });
   });
 
   const httpServer = createServer(app);
