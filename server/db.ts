@@ -5,11 +5,12 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.SUPABASE_DB_URL) {
+const DATABASE_URL = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+if (!DATABASE_URL) {
   throw new Error(
-    "SUPABASE_DB_URL must be set. Did you forget to configure Lovable Cloud?",
+    "Database URL missing. Set SUPABASE_DB_URL (preferred) or DATABASE_URL.",
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.SUPABASE_DB_URL });
+export const pool = new Pool({ connectionString: DATABASE_URL });
 export const db = drizzle({ client: pool, schema });

@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const pgStore = connectPg(session);
   app.use(session({
     store: new pgStore({
-      conString: process.env.SUPABASE_DB_URL,
+      conString: process.env.SUPABASE_DB_URL || process.env.DATABASE_URL,
       createTableIfMissing: false,
       tableName: "sessions",
     }),
