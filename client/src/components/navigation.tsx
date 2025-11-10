@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type UserWithRole } from "@/hooks/useAuth";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

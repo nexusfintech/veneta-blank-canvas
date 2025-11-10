@@ -29,8 +29,8 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 // Admin middleware
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   try {
-    const user = await storage.getUser(req.session.userId!);
-    if (!user || user.role !== "admin") {
+    const isAdmin = await storage.hasRole(req.session.userId!, "admin");
+    if (!isAdmin) {
       return res.status(403).json({ message: "Admin access required" });
     }
     next();
@@ -138,7 +138,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      res.json({ ...user, password: undefined });
+      // Add role information
+      const role = await storage.getUserRole(user.id);
+      res.json({ ...user, password: undefined, role });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user" });
     }
@@ -147,8 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/clients", requireAuth, async (req, res) => {
     try {
       const { search, type, status } = req.query;
-      const userRole = req.session.user?.role;
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
+      const isAdmin = await storage.hasRole(userId, "admin");
 
       let clients;
       if (search) {
@@ -166,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // If user is not admin, show only their own clients and hide contact information
-      if (userRole !== "admin") {
+      if (!isAdmin) {
         clients = clients
           .filter(client => client.createdBy === userId)
           .map(client => ({
@@ -213,11 +215,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Client not found" });
       }
 
-      const userRole = req.session.user?.role;
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
+      const isAdmin = await storage.hasRole(userId, "admin");
       
       // If user is not admin, check if they own this client and hide contact information
-      if (userRole !== "admin") {
+      if (!isAdmin) {
         if (client.createdBy !== userId) {
           return res.status(403).json({ message: "Access denied" });
         }
@@ -444,9 +446,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/users", requireAuth, requireAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      // Don't send passwords in response
-      const safeUsers = users.map(user => ({ ...user, password: undefined }));
-      res.json(safeUsers);
+      // Add role information to each user
+      const usersWithRoles = await Promise.all(
+        users.map(async (user) => {
+          const role = await storage.getUserRole(user.id);
+          return { ...user, password: undefined, role };
+        })
+      );
+      res.json(usersWithRoles);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
     }
@@ -454,7 +461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/users", requireAuth, requireAdmin, async (req, res) => {
     try {
-      const userData = req.body;
+      const { role, ...userData } = req.body;
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
@@ -463,7 +470,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser(userData);
-      res.status(201).json({ ...user, password: undefined });
+      
+      // Set user role in separate table
+      if (role) {
+        await storage.setUserRole(user.id, role);
+      }
+      
+      res.status(201).json({ ...user, password: undefined, role });
     } catch (error) {
       res.status(500).json({ message: "Failed to create user" });
     }

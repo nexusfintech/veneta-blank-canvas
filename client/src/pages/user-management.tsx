@@ -17,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { queryClient } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
+import type { UserWithRole } from "@/hooks/useAuth";
 
 const createUserSchema = z.object({
   email: z.string().email("Email non valida"),
@@ -45,7 +46,7 @@ export default function UserManagement() {
   });
 
   // Fetch all users
-  const { data: users, isLoading } = useQuery<User[]>({
+  const { data: users, isLoading } = useQuery<UserWithRole[]>({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
       const response = await fetch("/api/admin/users", {

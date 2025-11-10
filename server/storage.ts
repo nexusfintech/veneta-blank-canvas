@@ -1,6 +1,6 @@
-import { type Client, type InsertClient, clients, type User, type InsertUser, type LoginData, users } from "@shared/schema";
+import { type Client, type InsertClient, clients, type User, type InsertUser, type LoginData, users, userRoles } from "@shared/schema";
 import { db } from "./db";
-import { eq, or, ilike } from "drizzle-orm";
+import { eq, or, ilike, and, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -26,6 +26,11 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   deleteUser(id: string): Promise<boolean>;
   authenticateUser(credentials: LoginData): Promise<User | null>;
+  
+  // Role operations
+  getUserRole(userId: string): Promise<string | undefined>;
+  hasRole(userId: string, role: string): Promise<boolean>;
+  setUserRole(userId: string, role: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -164,6 +169,36 @@ export class DatabaseStorage implements IStorage {
     }
 
     return user;
+  }
+
+  // Role operations
+  async getUserRole(userId: string): Promise<string | undefined> {
+    const [role] = await db.select().from(userRoles).where(eq(userRoles.userId, userId));
+    return role?.role;
+  }
+
+  async hasRole(userId: string, role: string): Promise<boolean> {
+    const [userRole] = await db
+      .select()
+      .from(userRoles)
+      .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role)));
+    return !!userRole;
+  }
+
+  async setUserRole(userId: string, role: string): Promise<void> {
+    // Check if user already has a role
+    const existingRole = await this.getUserRole(userId);
+    
+    if (existingRole) {
+      // Update existing role
+      await db
+        .update(userRoles)
+        .set({ role })
+        .where(eq(userRoles.userId, userId));
+    } else {
+      // Insert new role
+      await db.insert(userRoles).values({ userId, role });
+    }
   }
 }
 

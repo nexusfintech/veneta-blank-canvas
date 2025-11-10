@@ -150,11 +150,17 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique().notNull(),
   password: varchar("password").notNull(), // Will store hashed password
-  role: varchar("role").notNull().default("user"), // "admin" or "user"
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User roles table (separate for security)
+export const userRoles = pgTable("user_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  role: text("role").notNull(), // "admin" or "user"
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

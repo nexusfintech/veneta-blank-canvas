@@ -9,29 +9,43 @@ async function seedUsers() {
     const normalUser = await storage.getUserByEmail("app@nexusfintech.it");
 
     if (!adminUser) {
-      await storage.createUser({
+      const newAdmin = await storage.createUser({
         email: "mauro.frasson@venetagroup.com",
         password: "Admin123!",
-        role: "admin",
         firstName: "Mauro",
         lastName: "Frasson",
       });
+      await storage.setUserRole(newAdmin.id, "admin");
       console.log("✅ Admin user created: mauro.frasson@venetagroup.com / Admin123!");
     } else {
-      console.log("ℹ️ Admin user already exists");
+      // Ensure admin has admin role
+      const hasAdminRole = await storage.hasRole(adminUser.id, "admin");
+      if (!hasAdminRole) {
+        await storage.setUserRole(adminUser.id, "admin");
+        console.log("✅ Admin role assigned to existing user");
+      } else {
+        console.log("ℹ️ Admin user already exists");
+      }
     }
 
     if (!normalUser) {
-      await storage.createUser({
+      const newUser = await storage.createUser({
         email: "app@nexusfintech.it",
         password: "User123!",
-        role: "user",
         firstName: "User",
         lastName: "Nexus",
       });
+      await storage.setUserRole(newUser.id, "user");
       console.log("✅ Normal user created: app@nexusfintech.it / User123!");
     } else {
-      console.log("ℹ️ Normal user already exists");
+      // Ensure user has user role
+      const hasUserRole = await storage.hasRole(normalUser.id, "user");
+      if (!hasUserRole) {
+        await storage.setUserRole(normalUser.id, "user");
+        console.log("✅ User role assigned to existing user");
+      } else {
+        console.log("ℹ️ Normal user already exists");
+      }
     }
 
     console.log("Users initialization completed!");

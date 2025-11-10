@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 
+// Extend User type to include role
+export type UserWithRole = User & { role?: string };
+
 export function useAuth() {
-  const { data: user, isLoading, error } = useQuery<User>({
+  const { data: user, isLoading, error } = useQuery<UserWithRole>({
     queryKey: ["/api/auth/user"],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
