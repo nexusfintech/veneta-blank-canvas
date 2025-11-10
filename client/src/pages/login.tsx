@@ -36,17 +36,34 @@ export default function Login() {
         });
         
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || "Login failed");
+          // Safe error extraction without assuming JSON
+          let message = `Errore ${response.status}`;
+          const ct = response.headers.get("content-type") || "";
+          try {
+            if (ct.includes("application/json")) {
+              const err = await response.json();
+              message = err.message || message;
+            } else {
+              const text = await response.text();
+              message = text || message;
+            }
+          } catch {
+            // ignore parse errors
+          }
+          throw new Error(message);
         }
         
-        return response.json();
+        const ct = response.headers.get("content-type") || "";
+        if (ct.includes("application/json")) {
+          return response.json();
+        }
+        return { message: "Login effettuato" };
       } catch (error) {
         // Handle network errors
         if (error instanceof TypeError && error.message.includes('fetch')) {
           throw new Error("Errore di connessione. Controlla la tua connessione internet.");
         }
-        throw error;
+        throw (error instanceof Error) ? error : new Error("Errore imprevisto");
       }
     },
     onSuccess: () => {

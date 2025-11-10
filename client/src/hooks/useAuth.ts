@@ -18,6 +18,12 @@ export function useAuth() {
         return null;
       }
       
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        // In dev, a missing API route may return HTML from the dev server
+        return null;
+      }
+      
       if (!response.ok) {
         throw new Error("Failed to fetch user");
       }
