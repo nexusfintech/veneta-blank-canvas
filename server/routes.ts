@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(session({
     store: new pgStore({
       conString: process.env.DATABASE_URL,
-      createTableIfMissing: false,
+      createTableIfMissing: true,
       tableName: "sessions",
     }),
     secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
@@ -91,6 +91,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sameSite: "lax", // More permissive for deployment
     },
   }));
+  // API logger
+  app.use("/api", (req, _res, next) => {
+    console.log(`[API] ${req.method} ${req.path}`);
+    next();
+  });
 
   // Healthcheck route to verify API is mounted
   app.get("/api/health", (_req, res) => {
